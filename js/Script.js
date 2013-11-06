@@ -10,14 +10,14 @@ var devices = [
         },
         {
             name: 'iPhone 4/4s',
-            width: 640,
-            height: 960,
+            width: 320,
+            height: 480,
             id: 'iphone4'
         },
         {
             name: 'iPhone 5/5s',
-            width: 640,
-            height: 1136,
+            width: 320,
+            height: 564,
             id: 'iphone5'
         }
 ];
@@ -32,11 +32,9 @@ function PopulateDevicesList() {
 
 jQuery("#phoneselector").change(function () {
     var selectedVal = jQuery(this).val();
-    console.log(selectedVal);
     device = jQuery.grep(devices, function (n,i) { return n.id ==  selectedVal})[0];
     if (device != null) {
-        console.log(device);
-        jQuery(".content-slides").animate({ width: device.width +'px', height: device.height + 'px' }, 500);
+        jQuery(".device-wrapper").animate({ width: device.width + 56 +'px', height: device.height + 148 + 'px' }, 500);
     }
 });
 
