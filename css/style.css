@@ -57,11 +57,39 @@
     background-color: #fff;
 }
 .story_item {
-    min-height: 333px;
+    min-height: 379px;
+    position: relative;
+    
 }
 .bottom-pagination > div {
     display: inline-block;
     margin: auto;
     font-size: 11px;
     text-align: center;
+}
+.story_image img {
+    min-height: 100px;
+    max-height: 175px;
+}
+.story_headline, .story_headline h3 {
+    padding: 0px;
+}
+.first_story_content {
+    padding: 10px 5%;
+}
+.story_item .timestamp {
+    padding: 3px 0px;
+    border-top: 1px #ccc solid;
+    border-bottom: 1px #ddd solid;
+    margin: 10px 0px;
+}
+.story_abstract {
+    font-size: 12px;
+}
+.statusbar {
+    position: absolute;
+    text-align: center;
+    top:  358px;
+    width: 100%;
+    font-size: 11px;
 }

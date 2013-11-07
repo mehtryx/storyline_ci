@@ -27,7 +27,7 @@ function PopulateDevicesList() {
     jQuery.each(devices, function (index, value) {
         selector.append("<option value='" + value.id + "'>" + value.name + "</option>");
     });
-    
+    jQuery(".sub").css({ top:  413});
 }
 
 jQuery("#phoneselector").change(function () {
