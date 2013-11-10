@@ -24,8 +24,8 @@
     margin: 5px 0;
 }
 .viewport-wrapper  {
-    width: 320px;
-    height: 480px;
+    width: 100%;
+    height: 100%;
     background:#fff url(chrome-extension://geelfhphabnejjhdalkjhgipohgpdnoc/images/ui-bg-hashed.png) repeat;
     border: 2px solid rgba(204,204,204,0.75);
     -webkit-border-radius: 5px;
