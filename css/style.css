@@ -93,3 +93,9 @@
     width: 100%;
     font-size: 11px;
 }
+.adBanner {
+    background-image: url(../img/bottom-ad.gif);
+}
+#nav_icon {
+    background-image: url(../img/logo.png);
+}

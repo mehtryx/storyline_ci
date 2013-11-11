@@ -26,44 +26,38 @@
                 id: 'nexus4'
             }
     ];
-    var storyItemHeight = 480;
-    var storyItemWidth = 320;
-    function PopulateDevicesList() {
+    populateDevicesList = function () {
         var selector = $("#phoneselector");
         $.each(devices, function (index, value) {
             selector.append("<option value='" + value.id + "'>" + value.name + "</option>");
         });
-        
     }
-    function adjustFooterPosition (height) {
-        $(".adBanner").css({top:height-495, width: '100%'});
-        $(".statusbar").css({top:height-135, width: '100%'});
-        $(".sub").css({top:height-90, width: '100%'});
+    adjustFooterPosition = function (height) {
+        $(".adBanner").css({ top: height - 495, width: '100%' });
+        $(".statusbar").css({ top: height - 135, width: '100%' });
+        $(".sub").css({ top: height - 90, width: '100%' });
     }
-    new Swiper('.swiper-container', {
-        pagination: '.pagination',
-        paginationClickable: true,
-        mode: 'vertical',
-        width: '100%',
-    });
-    $(".sub").css({ top:  413});
+
+    $(".sub").css({ top: 413 });
     $("#phoneselector").change(function () {
         var selectedVal = $(this).val();
-        device = $.grep(devices, function (n,i) { return n.id ==  selectedVal})[0];
+        device = $.grep(devices, function (n, i) { return n.id == selectedVal })[0];
         if (device != null) {
-            $(".device-wrapper").animate({ width: device.width + 56 +'px', height: device.height + 148 + 'px' }, 500);
+            $(".device-wrapper").animate({ width: device.width + 56 + 'px', height: device.height + 148 + 'px' }, 500);
             adjustFooterPosition(device.height);
-            new Swiper('.swiper-container', {
-                pagination: '.pagination',
-                paginationClickable: true,
-                mode: 'vertical'
-            });
+            slider.destroy({ removeResizeEvent: true });
+            slider = InitSwiper();
         }
     });
-
-
-
-    
-    PopulateDevicesList();
+    InitSwiper = function () {
+        return new Swiper('.swiper-container', {
+            pagination: '.pagination',
+            paginationClickable: true,
+            mode: 'vertical',
+            width: '100%'
+        });
+    }
+    populateDevicesList();
     adjustFooterPosition(480);
+    var slider = InitSwiper();
 })(jQuery);
