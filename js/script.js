@@ -60,4 +60,4 @@
     populateDevicesList();
     adjustFooterPosition(480);
     var slider = InitSwiper();
-})(jQuery);
+})(jQuery); 
