@@ -1,4 +1,3 @@
-
 (function ($) {
     var devices = [
             {
@@ -45,8 +44,7 @@
         if (device != null) {
             $(".device-wrapper").animate({ width: device.width + 56 + 'px', height: device.height + 148 + 'px' }, 500);
             adjustFooterPosition(device.height);
-            slider.destroy({ removeResizeEvent: true });
-            slider = InitSwiper();
+            $(".swiper-wrapper, .swiper-slide").width("100%");
         }
     });
     InitSwiper = function () {
