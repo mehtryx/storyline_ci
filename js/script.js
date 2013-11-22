@@ -52,7 +52,13 @@
             pagination: '.pagination',
             paginationClickable: true,
             mode: 'vertical',
-            width: '100%'
+            width: '100%',
+            mousewheelControl: true,
+            keyboardControl: true,
+            touchRatio: 1.0,
+            resistance: false,
+            speed: 1000,
+
         });
     }
     populateDevicesList();
