@@ -68,6 +68,13 @@ class SMRT_Storyline {
             'supports' => array( 'title', 'editor', 'thumbnail', 'excerpt','post-formats'),
             'taxonomies' => array( 'category')
         ) );
+		
+		register_taxonomy( 'smrt-topic', 'storyline', array(
+			'label' => __( 'Topic' ),
+			'rewrite' => array( 'slug' => 'smrt-topic' ),
+			'hierarchical' => false,
+			'update_count_callback' => '_update_post_term_count'
+		) );
     }
     
     public function render_content_slides($slides)
