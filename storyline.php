@@ -75,7 +75,7 @@ class SMRT_Storyline {
 		}
 		
 		// return topics
-		$item['topics'] = [];
+		$item['topics'] = Array();
 		$topics = wp_get_post_terms( $item['id'], 'smrt-topic' );
 		if ( is_array( $topics) ) {
 			foreach( $topics as $topic ) {
