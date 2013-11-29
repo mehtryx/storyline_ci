@@ -45,6 +45,10 @@ class SMRT_Storyline {
         add_action( 'init', array( $this, 'register_storyline' ) );
         add_filter( 'the_content', array( $this, 'modified_post_view' )); 
         add_filter( 'json_feed_item',  array( $this ,'json_feed_items_with_slides' ) );
+		
+		// register ajax handler for topics
+		add_action( 'wp_ajax_smrt_topics', array( $this, 'smrt_topics_callback' ) );
+		add_action( 'wp_ajax_nopriv_smrt_topics', array( $this, 'smrt_topics_callback' ) );
     }
 	
     public function json_feed_items_with_slides($item){
@@ -69,6 +73,19 @@ class SMRT_Storyline {
 				$item['featured_image_url'] = $featured[0];
 			}
 		}
+		
+		// return topics
+		$item['topics'] = [];
+		$topics = wp_get_post_terms( $item['id'], 'smrt-topic' );
+		if ( is_array( $topics) ) {
+			foreach( $topics as $topic ) {
+				$item['topics'][] = array (
+					'id' => (int) $topic->term_id,
+					'title' => $topic->name,
+					'slug' => $topic->slug
+				);
+			}
+		}
 
         return $item;
     }
@@ -86,15 +103,35 @@ class SMRT_Storyline {
             'menu_position' => 5,
             'has_archive' => true,
             'rewrite' => array( 'slug' => 'storyline' ),
-            'supports' => array( 'title', 'editor', 'thumbnail', 'excerpt','post-formats'),
-            'taxonomies' => array( 'category')
+            'supports' => array( 'title', 'editor', 'thumbnail', 'excerpt','post-formats')
         ) );
 		
+		$labels = array(
+			'name'                       => _x( 'Topics', 'taxonomy general name' ),
+			'singular_name'              => _x( 'Topic', 'taxonomy singular name' ),
+			'search_items'               => __( 'Search Topics' ),
+			'popular_items'              => __( 'Popular Topics' ),
+			'all_items'                  => __( 'All Topics' ),
+			'parent_item'                => null,
+			'parent_item_colon'          => null,
+			'edit_item'                  => __( 'Edit Topic' ),
+			'update_item'                => __( 'Update Topic' ),
+			'add_new_item'               => __( 'Add New Topic' ),
+			'new_item_name'              => __( 'New Topic' ),
+			'separate_items_with_commas' => __( 'Separate topics with commas' ),
+			'add_or_remove_items'        => __( 'Add or remove topics' ),
+			'choose_from_most_used'      => __( 'Choose from the most used topics' ),
+			'not_found'                  => __( 'No topics found.' ),
+			'menu_name'                  => __( 'Topics' ),
+		);
+		
 		register_taxonomy( 'smrt-topic', 'storyline', array(
-			'label' => __( 'Topic' ),
+			'labels' => $labels,
 			'rewrite' => array( 'slug' => 'smrt-topic' ),
 			'hierarchical' => false,
-			'update_count_callback' => '_update_post_term_count'
+			'show_admin_column' => true,
+			'update_count_callback' => '_update_post_term_count',
+			'query_var' => true
 		) );
     }
     
@@ -162,5 +199,15 @@ class SMRT_Storyline {
                 </div>";                                
         
     }
+	
+	public function smrt_topics_callback() {
+		
+		$topics = get_terms( 'smrt-topic', array(
+			'orderby' => 'count'
+		) );
+		
+		ob_clean();
+		wp_send_json( $topics );
+	}
 }
 $smrt_storyline = new SMRT_Storyline();
