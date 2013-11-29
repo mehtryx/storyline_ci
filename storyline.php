@@ -32,16 +32,21 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-define( 'SMRT_STORYLINE_VERSION', '0.2.1');
+define( 'SMRT_STORYLINE_VERSION', '0.2.2' );
 
 class SMRT_Storyline {
 
     public function __construct() {
+		// register new image sizes
+		add_image_size( 'smrt-phone-thumb', 190, 190, true );
+		add_image_size( 'smrt-phone-feature', 640, 384, true );
+		
+		// register hooks and filters	
         add_action( 'init', array( $this, 'register_storyline' ) );
         add_filter( 'the_content', array( $this, 'modified_post_view' )); 
-        add_filter('json_feed_item',  array($this ,'json_feed_items_with_slides'));
+        add_filter( 'json_feed_item',  array( $this ,'json_feed_items_with_slides' ) );
     }
-    
+	
     public function json_feed_items_with_slides($item){
         
         if('storyline' != $item['type']) 
@@ -49,6 +54,22 @@ class SMRT_Storyline {
 
         $item['content'] =   $this -> split_content($item['content']);
         $item['last_modified'] = get_lastpostmodified();
+		
+		// specify thumbnail and overwrite featured image url
+		$thumbnail_id = get_post_thumbnail_id( $item['id'] );
+		if ( !empty( $thumbnail_id ) ) {
+			
+			$thumbnail = wp_get_attachment_image_src( $thumbnail_id, 'smrt-phone-thumb' );
+			if ( !empty( $thumbnail ) ) {
+				$item['thumbnail_url'] = $thumbnail[0];
+			}
+
+			$featured = wp_get_attachment_image_src( $thumbnail_id, 'smrt-phone-feature' );
+			if ( !empty( $thumbnail ) ) {
+				$item['featured_image_url'] = $featured[0];
+			}
+		}
+
         return $item;
     }
     
