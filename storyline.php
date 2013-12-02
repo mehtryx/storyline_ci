@@ -86,7 +86,7 @@ class SMRT_Storyline {
         return $item;
     }
     
-	function add_image_url( &$item, $field, $size ) {
+	function add_image_url( &$item, $thumbnail_id, $field, $size ) {
 		$image = wp_get_attachment_image_src( $thumbnail_id, $size );
 		if ( !empty( $image ) ) {
 			$item[$field] = $image[0];
