@@ -62,10 +62,13 @@ class SMRT_Storyline {
         $item['last_modified'] = get_lastpostmodified();
 		
 		// specify thumbnail and overwrite featured image url
-		$this->add_image_url( $item, 'thumbnail_url', 'smrt-phone-thumb' );
-		$this->add_image_url( $item, 'thumbnail_url_x2', 'smrt-phone-thumb-x2' );
-		$this->add_image_url( $item, 'featured_image_url', 'smrt-phone-feature' );
-		$this->add_image_url( $item, 'featured_image_url_x2', 'smrt-phone-feature-x2' );
+		$thumbnail_id = get_post_thumbnail_id( $item['id'] );
+		if ( !empty( $thumbnail_id ) ) {
+			$this->add_image_url( $item, $thumbnail_id, 'thumbnail_url', 'smrt-phone-thumb' );
+			$this->add_image_url( $item, $thumbnail_id, 'thumbnail_url_x2', 'smrt-phone-thumb-x2' );
+			$this->add_image_url( $item, $thumbnail_id, 'featured_image_url', 'smrt-phone-feature' );
+			$this->add_image_url( $item, $thumbnail_id, 'featured_image_url_x2', 'smrt-phone-feature-x2' );
+		}
 				
 		// return topics
 		$item['topics'] = Array();
@@ -84,16 +87,9 @@ class SMRT_Storyline {
     }
     
 	function add_image_url( &$item, $field, $size ) {
-		static $thumbnail_id;
-		if ( !isset( $thumbnail_id ) ) {
-			$thumbnail_id = get_post_thumbnail_id( $item['id'] );
-		}
-		
-		if ( !empty( $thumbnail_id ) ) {
-			$image = wp_get_attachment_image_src( $thumbnail_id, $size );
-			if ( !empty( $image ) ) {
-				$item[$field] = $image[0];
-			}
+		$image = wp_get_attachment_image_src( $thumbnail_id, $size );
+		if ( !empty( $image ) ) {
+			$item[$field] = $image[0];
 		}
 	}
 	
