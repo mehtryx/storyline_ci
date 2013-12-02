@@ -38,8 +38,10 @@ class SMRT_Storyline {
 
     public function __construct() {
 		// register new image sizes
-		add_image_size( 'smrt-phone-thumb', 190, 190, true );
-		add_image_size( 'smrt-phone-feature', 640, 384, true );
+		add_image_size( 'smrt-phone-thumb', 95, 95, true );
+		add_image_size( 'smrt-phone-thumb-x2', 190, 190, true );
+		add_image_size( 'smrt-phone-feature', 320, 192, true );
+		add_image_size( 'smrt-phone-feature-x2', 640, 384, true );
 		
 		// register hooks and filters	
         add_action( 'init', array( $this, 'register_storyline' ) );
@@ -60,20 +62,11 @@ class SMRT_Storyline {
         $item['last_modified'] = get_lastpostmodified();
 		
 		// specify thumbnail and overwrite featured image url
-		$thumbnail_id = get_post_thumbnail_id( $item['id'] );
-		if ( !empty( $thumbnail_id ) ) {
-			
-			$thumbnail = wp_get_attachment_image_src( $thumbnail_id, 'smrt-phone-thumb' );
-			if ( !empty( $thumbnail ) ) {
-				$item['thumbnail_url'] = $thumbnail[0];
-			}
-
-			$featured = wp_get_attachment_image_src( $thumbnail_id, 'smrt-phone-feature' );
-			if ( !empty( $thumbnail ) ) {
-				$item['featured_image_url'] = $featured[0];
-			}
-		}
-		
+		$this->add_image_url( $item, 'thumbnail_url', 'smrt-phone-thumb' );
+		$this->add_image_url( $item, 'thumbnail_url_x2', 'smrt-phone-thumb-x2' );
+		$this->add_image_url( $item, 'featured_image_url', 'smrt-phone-feature' );
+		$this->add_image_url( $item, 'featured_image_url_x2', 'smrt-phone-feature-x2' );
+				
 		// return topics
 		$item['topics'] = Array();
 		$topics = wp_get_post_terms( $item['id'], 'smrt-topic' );
@@ -90,6 +83,20 @@ class SMRT_Storyline {
         return $item;
     }
     
+	function add_image_url( &$item, $field, $size ) {
+		static $thumbnail_id;
+		if ( !isset( $thumbnail_id ) ) {
+			$thumbnail_id = get_post_thumbnail_id( $item['id'] );
+		}
+		
+		if ( !empty( $thumbnail_id ) ) {
+			$image = wp_get_attachment_image_src( $thumbnail_id, $size );
+			if ( !empty( $image ) ) {
+				$item[$field] = $image[0];
+			}
+		}
+	}
+	
     function split_content($content){
         $content = preg_replace('/<span id=\"more-.*\"><\/span>/u', "<!--more-->", $content);
         return explode("<!--more-->", $content);
