@@ -89,7 +89,7 @@ class SMRT_Storyline {
             return $item;
 
         $item['content'] =   $this->split_content($item['content']);
-        $item['last_modified'] = get_the_modified_time();
+        $item['last_modified'] = get_the_modified_time(json_feed_date_format());
 		
 		// specify thumbnail and overwrite featured image url
 		$thumbnail_id = get_post_thumbnail_id();
