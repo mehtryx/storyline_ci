@@ -175,7 +175,8 @@ class SMRT_Storyline {
             'menu_position' => 5,
             'has_archive' => true,
             'rewrite' => array( 'slug' => 'storyline' ),
-            'supports' => array( 'title', 'editor', 'thumbnail', 'excerpt','post-formats')
+            'supports' => array( 'title', 'editor', 'thumbnail', 'excerpt','post-formats' ),
+			'taxonomies' => array( 'category' )
         ) );
 		
 		$labels = array(
