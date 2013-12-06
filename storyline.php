@@ -88,9 +88,9 @@ class SMRT_Storyline {
        	if('storyline' !== $item['type']) 
             return $item;
 
-        $item['content'] =   $this->split_content($item['content']);
+        $item['content'] = $this->split_content( $item['content'], true );
         $item['last_modified'] = get_the_modified_time(json_feed_date_format());
-		
+
 		// specify thumbnail and overwrite featured image url
 		$thumbnail_id = get_post_thumbnail_id();
 		if ( !empty( $thumbnail_id ) ) {
@@ -144,13 +144,19 @@ class SMRT_Storyline {
 	 * @param string $content The text to convert
 	 * @return string[] An array of slides
 	 */
-    function split_content( $content ) {
+    function split_content( $content, $apply_filters = false ) {
 		if ( empty( $content ) ) {
 			return array();
 		}
 		
         $content = preg_replace( '/<span id=\"more-.*\"><\/span>/u', "<!--more-->", $content );
-        return explode( "<!--more-->", $content );
+		$slides = explode( "<!--more-->", $content );
+		if ( $apply_filters ) {
+			for( $index = 0, $len = count( $slides ); $index < $len; $index ++) {
+				$slides[$index] = apply_filters( 'the_content', $slides[$index]);
+			}
+		}
+        return $slides;
     }
     
 	/**
@@ -224,9 +230,8 @@ class SMRT_Storyline {
     public function modified_post_view( $content ) {
         global $post;
 		
-        if( $post->post_type != 'storyline' )
+        if( $post->post_type != 'storyline' || is_feed() )
             return $content;
-        
        
         $header = "<div class='x-container x-toolbar-dark x-toolbar x-navigation-bar x-stretched x-paint-monitored x-layout-box-item' id='ext-titlebar-1'><div class='x-body' id='ext-element-13'><div class='x-center' id='ext-element-14'><div class='x-unsized x-title x-floating' id='ext-title-1' style='z-index: 8 !important;'><div class='x-innerhtml' id='ext-element-12'></div></div></div><div class='x-inner x-toolbar-inner x-horizontal x-align-stretch x-pack-start x-layout-box' id='ext-element-9'><div class='x-container x-size-monitored x-paint-monitored x-layout-box-item x-stretched' id='ext-container-1' style='position: relative;'><div class='x-inner x-horizontal x-align-center x-pack-start x-layout-box' id='ext-element-10' style=''><div class='x-img x-img-image x-img-background x-sized x-paint-monitored x-size-monitored x-layout-box-item' id='nav_btn' style='width: 50px !important; height: 50px !important; background-image: url(/wp-content/plugins/storyline/img/toolbar/icon-menu.png);'><div class='x-paint-monitor overflowchange'></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 51px; height: 51px;'></div></div><div class='shrink'><div style='width: 50px; height: 50px;'></div></div></div></div><div class='x-img x-img-image x-img-background x-sized x-paint-monitored x-size-monitored x-layout-box-item' id='nav_icon' style='width: 42px !important; height: 48px !important; background-image: url(/wp-content/plugins/storyline/img/logo.png);'><div class='x-paint-monitor overflowchange'></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 43px; height: 49px;'></div></div><div class='shrink'><div style='width: 42px; height: 48px;'></div></div></div></div></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 93px; height: 51px;'></div></div><div class='shrink'><div style='width: 92px; height: 50px;'></div></div></div><div class='x-paint-monitor overflowchange'></div></div><div class='x-size-monitored x-paint-monitored x-layout-box-item x-flexed x-stretched' id='ext-component-1' style='position: relative; -webkit-box-flex: 1;'><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 1128.71875px; height: 51px;'></div></div><div class='shrink'><div style='width: 1127.71875px; height: 50px;'></div></div></div><div class='x-paint-monitor overflowchange'></div></div><div class='x-container x-size-monitored x-paint-monitored x-layout-box-item x-stretched' id='ext-container-2' style='position: relative;'><div class='x-inner x-horizontal x-align-center x-pack-start x-layout-box' id='ext-element-11' style=''><div class='x-img x-img-image x-img-background x-sized x-paint-monitored x-size-monitored x-layout-box-item' id='bt_alert' style='width: 50px !important; height: 50px !important; background-image: url(/wp-content/plugins/storyline/img/toolbar/icon-alerts-active.png);'><div class='x-paint-monitor overflowchange'></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 51px; height: 51px;'></div></div><div class='shrink'><div style='width: 50px; height: 50px;'></div></div></div></div></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 51px; height: 51px;'></div></div><div class='shrink'><div style='width: 50px; height: 50px;'></div></div></div><div class='x-paint-monitor overflowchange'></div></div></div></div><div class='x-paint-monitor overflowchange'></div></div>";
         $adBanner = "<div class='adBanner x-img x-img-image x-sized x-paint-monitored x-size-monitored bottom_ad x-img-background x-dock-item x-docked-bottom' id='ext-image-2' style='width: 100% !important; height: 50px !important;'><div class='x-paint-monitor overflowchange'></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 402px; height: 51px;'></div></div><div class='shrink'><div style='width: 100%; height: 50px;'></div></div></div></div>";
