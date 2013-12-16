@@ -64,8 +64,6 @@ class SMRT_Storyline {
         add_action( 'init', array( $this, 'register_storyline' ) );
         add_filter( 'the_content', array( $this, 'modified_post_view' ) ); 
         add_filter( 'json_feed_item',  array( $this ,'json_feed_items_with_slides' ) );
-
-        add_filter( 'query_vars', array( $this ,'smrt_topics_queryvars' ) );
 		
 		// register ajax handler for topics
 		add_action( 'wp_ajax_smrt_topics', array( $this, 'smrt_topics_callback' ) );
@@ -293,10 +291,8 @@ class SMRT_Storyline {
 			'orderby' => 'count'
 		) );
 		
-		//wp_send_json( $topics );
         header('Content-Type: application/javascript', true);
-        //echo get_query_var( 'topics' ) . '(' . json_encode( $topics ) . ')';
-        echo sanitize_text_field( $_GET['topics'] ) . '(' . json_encode( $topics ) . ')';
+        echo sanitize_text_field( $_GET[ 'topics' ] ) . '(' . json_encode( $topics ) . ')';
         wp_die();
 	}
 
