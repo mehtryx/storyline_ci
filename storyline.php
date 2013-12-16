@@ -295,11 +295,5 @@ class SMRT_Storyline {
         echo sanitize_text_field( $_GET[ 'topics' ] ) . '(' . json_encode( $topics ) . ')';
         wp_die();
 	}
-
-	public function smrt_topics_queryvars( $query_vars ) {
-		$query_vars[] = 'topics';
-		return $query_vars;
-	}
-
 }
 $smrt_storyline = new SMRT_Storyline();
