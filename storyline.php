@@ -291,8 +291,9 @@ class SMRT_Storyline {
 			'orderby' => 'count'
 		) );
 		
-		ob_clean();
-		wp_send_json( $topics );
+        header('Content-Type: application/javascript', true);
+        echo sanitize_text_field( $_GET[ 'topics' ] ) . '(' . json_encode( $topics ) . ')';
+        wp_die();
 	}
 }
 $smrt_storyline = new SMRT_Storyline();
