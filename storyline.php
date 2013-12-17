@@ -63,7 +63,7 @@ class SMRT_Storyline {
 		// register hooks and filters	
         add_action( 'init', array( $this, 'register_storyline' ) );
         add_filter( 'the_content', array( $this, 'modified_post_view' ) ); 
-        add_filter( 'json_feed_item',  array( $this ,'json_feed_items_with_slides' ) );
+        add_filter( 'json_feed_item',  array( $this ,'json_feed_items_with_slides' ), 10, 4 );
 		
 		// register ajax handler for topics
 		add_action( 'wp_ajax_smrt_topics', array( $this, 'smrt_topics_callback' ) );
@@ -82,14 +82,26 @@ class SMRT_Storyline {
 	 * @param object @item The json feed item
 	 * @return object The updated json feed item
 	 */
-    public function json_feed_items_with_slides( $item ) {
-		
+    public function json_feed_items_with_slides( $item, $id, $query_args, $json_feed ) {
+
 		// only update posts of type storyline
        	if('storyline' !== $item['type']) 
             return $item;
 
         $item['content'] = $this->split_content( $item['content'], true );
         $item['last_modified'] = get_the_modified_time(json_feed_date_format());
+		
+		// calculate index of post
+		static $offset;
+		if ( !isset( $offset ) ) {
+			$paged = ( $json_feed->get( 'paged' ) ) ? $json_feed->get( 'paged' ) : 1;
+			$posts_per_page = $json_feed->get( 'posts_per_page' );
+			$offset = ( $paged - 1 ) * $posts_per_page;
+		}
+		$item['position'] = $json_feed->current_post + $offset;
+		
+		// include total number of posts
+		$item['post_count'] = $json_feed->post_count;
 
 		// specify thumbnail and overwrite featured image url
 		$thumbnail_id = get_post_thumbnail_id();
