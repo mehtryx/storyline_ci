@@ -94,7 +94,7 @@ class SMRT_Storyline {
         $format = get_post_format();
 
         if( false !== $format )
-        	$item['post_format'] = $format();
+        	$item['post_format'] = $format;
 		
 		// calculate index of post
 		static $offset;
