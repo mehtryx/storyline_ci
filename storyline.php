@@ -90,7 +90,9 @@ class SMRT_Storyline {
 
         $item['content'] = $this->split_content( $item['content'], true );
         $item['last_modified'] = get_the_modified_time(json_feed_date_format());
-        $item['post_format'] = get_post_format();
+
+        if( false !== get_post_format() )
+        	$item['post_format'] = get_post_format();
 		
 		// calculate index of post
 		static $offset;
