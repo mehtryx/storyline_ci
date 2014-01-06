@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.2.2' );
+define( 'SMRT_STORYLINE_VERSION', '0.2.3' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -62,6 +62,7 @@ class SMRT_Storyline {
 		
 		// register hooks and filters	
         add_action( 'init', array( $this, 'register_storyline' ) );
+		add_action( 'publish_storyline', array( $this, 'set_date_sort' ) );
         add_filter( 'the_content', array( $this, 'modified_post_view' ) ); 
         add_filter( 'json_feed_item',  array( $this ,'json_feed_items_with_slides' ), 10, 4 );
 		
@@ -89,10 +90,17 @@ class SMRT_Storyline {
             return $item;
 
         $item['content'] = $this->split_content( $item['content'], true );
-        $item['last_modified'] = get_the_modified_time(json_feed_date_format());
-
+        $item['last_modified'] = get_the_modified_time( json_feed_date_format() );
+		
+		$date_sort = get_post_meta( $id, '_date_sort', true );
+		if( false === $date_sort ) {
+			$item['date_sort'] = $item['date'];
+		} else {
+			$item['date_sort'] = ( new DateTime( $date_sort ) )->format(json_feed_date_format() );
+		}
+		
+		// include post format
         $format = get_post_format();
-
         if( false !== $format )
         	$item['post_format'] = $format;
 		
@@ -103,10 +111,14 @@ class SMRT_Storyline {
 			$posts_per_page = $json_feed->get( 'posts_per_page' );
 			$offset = ( $paged - 1 ) * $posts_per_page;
 		}
-		$item['position'] = $json_feed->current_post + $offset;
+		$position = $json_feed->current_post + $offset;
+		$item['position'] = $position;
 		
-		// include total number of posts
-		$item['post_count'] = $json_feed->post_count;
+		// include total number of posts and query vars on first post
+		if ( 0 === $position ) {
+			$item['post_count'] = $json_feed->found_posts;
+			$item['query'] = $json_feed->query;
+		}
 
 		// specify thumbnail and overwrite featured image url
 		$thumbnail_id = get_post_thumbnail_id();
@@ -192,7 +204,7 @@ class SMRT_Storyline {
             'menu_position' => 5,
             'has_archive' => true,
             'rewrite' => array( 'slug' => 'storyline' ),
-            'supports' => array( 'title', 'editor', 'thumbnail', 'excerpt','post-formats' ),
+            'supports' => array( 'title', 'editor', 'thumbnail', 'excerpt','post-formats', 'page-attributes' ),
 			'taxonomies' => array( 'category' )
         ) );
 		
@@ -293,6 +305,25 @@ class SMRT_Storyline {
                 </div>";                                
         
     }
+	
+	/**
+	 * Saves the date only (no time) in custom field for sorting
+	 *
+	 * @since 0.2.3
+	 *
+	 * @uses get_post
+	 * @uses update_post_meta
+	 */
+	public function set_date_sort( $post_id ) {
+		$post = get_post( $post_id );
+		$date_sort = new DateTime( $post->post_date );
+		$date_sort->setTime( 0, 0, 0);
+		if ( !empty( $post->menu_order ) ) {
+			$date_sort->add( new DateInterval( 'P1D' ) );
+			$date_sort->sub( new DateInterval( 'PT' . $post->menu_order . 'M' ) );
+		}
+		update_post_meta( $post_id, '_date_sort', $date_sort->format( 'Y-m-d H:i:s' ) );
+	}
 	
 	/**
 	 * AJAX hook to return list of topics as JSON
