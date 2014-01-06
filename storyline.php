@@ -111,8 +111,7 @@ class SMRT_Storyline {
 			$posts_per_page = $json_feed->get( 'posts_per_page' );
 			$offset = ( $paged - 1 ) * $posts_per_page;
 		}
-		$position = $json_feed->current_post + $offset;
-		$item['position'] = $position;
+		$item['position'] = $json_feed->current_post + $offset;
 		
 		// include total number of posts and query vars on first post
 		if ( 0 === $position ) {
