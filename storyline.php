@@ -96,7 +96,9 @@ class SMRT_Storyline {
 		if( false === $date_sort ) {
 			$item['date_sort'] = $item['date'];
 		} else {
-			$item['date_sort'] = ( new DateTime( $date_sort ) )->format(json_feed_date_format() );
+			// split up as calling method on new object only works on php 5.4 or above.
+			$new_date = new DateTime( $date_sort );
+			$item['date_sort'] = $new_date->format(json_feed_date_format() );
 		}
 		
 		// include post format
