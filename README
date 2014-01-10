@@ -1,0 +1,29 @@
+=== storyline ===
+Contributors: Edward de Groot, Donnie Marges, Waheed Ashraf, Keith Benedict, Goldwin Guenther
+Tested up to: 3.8
+Stable tag: 0.2.4
+License: MIT
+License URI: https://github.com/Postmedia/storyline/blob/master/LICENSE
+
+== Description ==
+
+Supports mobile story elements
+
+== Installation ==
+
+Activate the plugin, Access the storyline menu off the main dashboard.
+
+== Changelog ==
+
+= 0.2.4 =
+
+* Initial version for VIP Review, contains the following features:
+	* hooked into json feed filters to extend and modify content for storyline feed
+	* register mobile image sizes and include in json feed
+	* custom post type 'storyline' created
+	* custom taxonomy called "topics" (smrt-topic)
+	* storyline post position and count added to json feed
+	* post format added to feed for styling on client
+	* support for ordering storylines via menu_order
+	* show preview of post in post editor screen (on preview only)
+
