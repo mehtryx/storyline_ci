@@ -17,6 +17,7 @@
 Basic Swiper Styles 
 ================================================================*/
 .swiper-container {
+	height: 100%;
 	margin:0 auto;
 	position:relative;
 	overflow:hidden;
@@ -67,6 +68,7 @@ Basic Swiper Styles
 }
 .swiper-slide {
 	float: left;
+	height: auto;
 }
 
 /* IE10 Windows Phone 8 Fixes */

@@ -11,7 +11,7 @@
 	box-shadow: 0 0 15px rgba(153,153,153,0.75);
 	margin: auto;
 	position: relative;
-	padding: 55px 25px 105px 25px;
+	padding: 55px 25px 87px 25px;
 	-webkit-border-radius: 20px;
 	border-radius: 20px;
 	display: block;
@@ -57,9 +57,9 @@
 	background-color: #fff;
 }
 .story_item {
-	min-height: 379px;
-	position: relative;
-	
+	width: inherit;
+	height: inherit;
+	position: absolute;
 }
 .bottom-pagination > div {
 	display: inline-block;
@@ -67,15 +67,10 @@
 	font-size: 11px;
 	text-align: center;
 }
-.story_image img {
-	min-height: 100px;
-	max-height: 175px;
-}
+
 .story_headline, .story_headline h3 {
 	padding: 0px;
-}
-.first_story_content {
-	padding: 10px 5%;
+	margin: 0;
 }
 .story_item .timestamp {
 	padding: 3px 0px;
@@ -87,15 +82,50 @@
 	font-size: 12px;
 }
 .statusbar {
-	position: absolute;
 	text-align: center;
-	top:  358px;
 	width: 100%;
-	font-size: 11px;
+	font-size: 12px;
 }
 .adBanner {
 	background-image: url(../img/bottom-ad.gif);
+	background-repeat: no-repeat;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 50px;
 }
 #nav_icon {
 	background-image: url(../img/logo.png);
+}
+
+/*
+ * This is the beginning of code to properly scale image and text properly in preview.
+ */
+
+.flex-container {
+	display: flex;
+	flex-direction: column;
+	justify-items: flex-start;
+	align-items: stretch;
+	align-content: stretch;
+	height: 100%;
+	width: 100%;
+}
+
+.story_image {
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	overflow: auto;
+	margin: 0;
+	padding: 0;
+	flex: 1;
+	height: auto;
+	width: auto;
+	text-align: center;
+}
+
+.first_story_content {
+	padding:0 5% 0 5%;
+	flex: 1;
 }

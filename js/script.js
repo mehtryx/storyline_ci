@@ -32,8 +32,8 @@
 		});
 	}
 	adjustFooterPosition = function (height) {
-		$(".adBanner").css({ top: height - 495, width: '100%' });
-		$(".statusbar").css({ top: height - 135, width: '100%' });
+		//$(".adBanner").css({ top: height - 495, width: '100%' });
+		//$(".statusbar").css({ top: height - 135, width: '100%' });
 		$(".sub").css({ top: height - 90, width: '100%' });
 	}
 
@@ -44,7 +44,9 @@
 		if (device != null) {
 			$(".device-wrapper").animate({ width: device.width + 56 + 'px', height: device.height + 148 + 'px' }, 500);
 			adjustFooterPosition(device.height);
-			$(".swiper-wrapper, .swiper-slide").width("100%");
+			$(".swiper-wrapper, .swiper-slider").width("100%").height("100%");
+			$('.flex-container').width('100%').height('100%');
+			$('.swiper-slide').width('100%').height('100%');
 		}
 	});
 	InitSwiper = function () {
