@@ -32,8 +32,6 @@
 		});
 	}
 	adjustFooterPosition = function (height) {
-		//$(".adBanner").css({ top: height - 495, width: '100%' });
-		//$(".statusbar").css({ top: height - 135, width: '100%' });
 		$(".sub").css({ top: height - 90, width: '100%' });
 	}
 
