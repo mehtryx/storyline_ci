@@ -322,13 +322,13 @@ class SMRT_Storyline {
 												<div class='first_story_content'>
 													<div class='story_headline'><h3>" . $post->post_title  . "</h3></div>
 													<div class='timestamp'><span class='updated'>Updated: </span><span>11:40 AM</span></div>
-													<div class='story_abstract'>" .	 wp_kses( $slides[0], $allowed_tags ) . "</div>
+													<div class='story_abstract'>" .	wp_kses( $slides[0], $allowed_tags ) . "</div>
 												</div>
-												<div class='statusbar'>1/" . ( count( $slides ) ) . "</div>" . $adBanner .
-											"</div>
+												<div class='adBannerPagination'><div class='statusbar'>1/" . ( count( $slides ) ) . "</div>" . $adBanner .
+											"</div></div>
 										</div>
 									</div>"
-									.  wp_kses( $this->render_content_slides( $slides ), $allowed_tags ) .
+									. $this->render_content_slides( $slides ) .
 								"</div>
 								<div class='pagination'></div>
 							<div>
