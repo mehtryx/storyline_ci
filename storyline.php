@@ -386,7 +386,7 @@ class SMRT_Storyline {
 	 * @uses sanitize_text_field()
 	 */
 	public function smrt_topics_callback() {
-		$topics = get_terms( 'smrt-topic', array( 'orderby' => 'count' ) );
+		$topics = get_terms( 'smrt-topic', array( 'orderby' => 'count', 'order' => 'DESC', 'number' => 6 ) );
 		
 		header( 'Content-Type: application/javascript', true );
 		echo sanitize_text_field( $_GET[ 'topics' ] ) . '(' . json_encode( $topics ) . ')';
