@@ -275,6 +275,9 @@
 }
 .story_item_2 {
 	position: relative;
+	margin: 0;
+}
+.story_item_2 p {
 	margin: 20px 0 0 0;
 }
 .story-image {
