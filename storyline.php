@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.2.5
+Version: 0.2.6
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.2.5' );
+define( 'SMRT_STORYLINE_VERSION', '0.2.6' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -69,6 +69,9 @@ class SMRT_Storyline {
 		// register ajax handler for topics
 		add_action( 'wp_ajax_smrt_topics', array( $this, 'smrt_topics_callback' ) );
 		add_action( 'wp_ajax_nopriv_smrt_topics', array( $this, 'smrt_topics_callback' ) );
+		
+		// default to custom sort
+		add_action( 'pre_get_posts', array( $this, 'sort_by_date_sort' ) );
 	}
 	
 	/**
@@ -357,6 +360,23 @@ class SMRT_Storyline {
 	}
 	
 	/**
+	 * defaults to sorting storylines by custom field _date_sort
+	 * this purposely changes the default sort for the admin as well
+	 *
+	 * @since 0.2.6
+	 */
+	public function sort_by_date_sort( $query ) {
+		
+		$orderby = $query->get( 'orderby' );
+		$post_type = $query->get( 'post_type' );
+		if ( empty( $orderby ) && 'storyline' === $post_type ) {
+			$query->set( 'orderby', 'meta_value' );
+			$query->set( 'meta_key', '_date_sort' );
+			
+		}
+	}
+	
+	/**
 	 * AJAX hook to return list of topics as JSON
 	 *
 	 * @since 0.2.2
@@ -366,7 +386,7 @@ class SMRT_Storyline {
 	 * @uses sanitize_text_field()
 	 */
 	public function smrt_topics_callback() {
-		$topics = get_terms( 'smrt-topic', array( 'orderby' => 'count' ) );
+		$topics = get_terms( 'smrt-topic', array( 'orderby' => 'count', 'order' => 'DESC', 'number' => 6 ) );
 		
 		header( 'Content-Type: application/javascript', true );
 		echo sanitize_text_field( $_GET[ 'topics' ] ) . '(' . json_encode( $topics ) . ')';
