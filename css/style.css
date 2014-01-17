@@ -252,6 +252,7 @@
 .story_item_2 {
 	position: relative;
 	margin: 0;
+	height: 100%;
 }
 .story_item_2 p {
 	margin: 20px 0 0 0;
