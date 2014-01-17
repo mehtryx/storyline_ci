@@ -383,8 +383,6 @@ class SMRT_Storyline {
 						. ( $caption && $href ? '<p class="caption">'. esc_html( $caption[1] ) . '</p>' : '' )
 						. '</div>'
 						. ( $caption && !$href? '<p class="caption">'. esc_html( $caption[1] ) . '</p>' : '' );
-
-					//return '{{{{ ' . ( $html ? $html : '' ) . ' }}}}';
 				} else {
 					return '<!-- missing image ' . esc_html( $id ) . ' -->';
 				}
