@@ -7,7 +7,7 @@
 /* Fonts */
 
 @font-face {
-	font-family: $font-benton;
+	font-family: 'BentonSansBook';
 	src: url('../fonts/bentonsans-book-webfont.otf') format('opentype'),
          url('../fonts/bentonsans-book-webfont.svg') format('svg');
 	font-weight: normal;
@@ -242,8 +242,8 @@
 	color: #8b8b8b;
 }
 .story_abstract p, .story_item p, .story_item_2 p {
-	font-family: 'Chronicle';
-	font-size: 80%;
+	font-family: 'BentonSansBook';
+	font-size: 85%;
 	color: #000;
 	line-height: 1.5em;
 	margin: 0;
