@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.2.6
+Version: 0.2.7
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.2.6' );
+define( 'SMRT_STORYLINE_VERSION', '0.2.7' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -59,11 +59,13 @@ class SMRT_Storyline {
 		add_image_size( 'smrt-phone-thumb-x2', 190, 190, true );
 		add_image_size( 'smrt-phone-feature', 320, 192, true );
 		add_image_size( 'smrt-phone-feature-x2', 640, 384, true );
+		add_image_size( 'smrt-phone-embedded', 640, 9999, false );
 		
 		// register hooks and filters	
 		add_action( 'init', array( $this, 'register_storyline' ) );
 		add_action( 'publish_storyline', array( $this, 'set_date_sort' ) );
 		add_filter( 'the_content', array( $this, 'modified_post_view' ) ); 
+		add_filter( 'the_content', array( $this, 'refactor_images' ), 99 ); 
 		add_filter( 'json_feed_item',  array( $this ,'json_feed_items_with_slides' ), 10, 4 );
 		
 		// register ajax handler for topics
@@ -304,7 +306,7 @@ class SMRT_Storyline {
 		$slide_image = null;
 		
 		if ( has_post_thumbnail( $post->ID ) ) {
-			$slide_image = wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), 'wp-post-image' );
+			$slide_image = wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), 'smrt-phone-feature-x2' );
 		}
 		
 		return "<div class='smart-device-preview'>
@@ -338,6 +340,53 @@ class SMRT_Storyline {
 						</div>
 					</div>
 				</div>";
+	}
+	
+	/**
+	 * Replaces embeded images with divs with background image
+	 * so that they can be clipped and fit on any mobile screen
+	 *
+	 * @since 0.2.7
+	 */
+	public function refactor_images( $content ) {
+		global $post;
+		
+		if( $post->post_type !== 'storyline' )
+			return $content;
+		
+		$content = preg_replace_callback(
+			'/^.*<img[^>]+ wp-image-(\\d+)[^>]+>.*$/um',
+			function( $matches ) {
+				$html = $matches[0];
+				$id = $matches[1];
+				
+				// get url for embedded image, regardless of size actually embedded in content
+				$src =  wp_get_attachment_image_src( $id, 'smrt-phone-embedded' );
+				if( $src ) {
+					
+					// find optional link to indicate gallery image
+					preg_match( '/href=\"(.+?)\"/u', $html, $href );
+					
+					// find optional caption
+					preg_match( '/<p class=\"wp-caption-text\">(.+)<\/p>/u', $html, $caption );
+					
+					// create the new div tag	
+					return '<div class="story-image'
+						. ( $href ? '-gallery' : '' )
+						. '"' 
+						. ' style="background-image: url(\'' . esc_url( $src[0] ) . '\');"'
+						. ( $href ? ' data-href="' . esc_url( $href[1] ) . '"' : '')
+						. '>'
+						. ( $caption ? '<p class="caption">'. $caption[1] . '</p>' : '')
+						. '</div>';
+				} else {
+					return '<!-- missing image ' . esc_html( $id ) . ' -->';
+				}
+			},
+			$content
+		);
+		
+		return $content;
 	}
 	
 	/**
