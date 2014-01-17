@@ -187,6 +187,7 @@ class SMRT_Storyline {
 		
 		$content = preg_replace( '/<span id=\"more-.*\"><\/span>/u', "<!--more-->", $content );
 		$slides = explode( "<!--more-->", $content );
+		$slides = preg_replace("/$(\s*&nbsp;\s*)+/um", "", $slides); // clean up leading spacing on deach slide
 		if ( $apply_filters ) {
 			for ( $index = 0, $len = count( $slides ); $index < $len; $index ++) {
 				$slides[$index] = apply_filters( 'the_content', $slides[$index] );
