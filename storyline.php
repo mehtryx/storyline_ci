@@ -380,9 +380,9 @@ class SMRT_Storyline {
 						. ( $href ? '-gallery' : '' )
 						. '"' 
 						. ' style="background-image: url(\'' . esc_url( $src[0] ) . '\');"'
-						. ( $href ? ' data-href="' . esc_url( $href[1] ) . '"' : '')
+						. ( $href ? ' data-href="' . esc_url( $href[1] ) . '"' : '' )
 						. '>'
-						. ( $caption ? '<p class="caption">'. esc_html( $caption[1] ) . '</p>' : '')
+						. ( $caption ? '<p class="caption">'. esc_html( $caption[1] ) . '</p>' : '' )
 						. '</div>';
 				} else {
 					return '<!-- missing image ' . esc_html( $id ) . ' -->';
