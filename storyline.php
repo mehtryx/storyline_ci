@@ -351,7 +351,12 @@ class SMRT_Storyline {
 	public function refactor_images( $content ) {
 		global $post;
 		
+		// only refactor for storylines
 		if( $post->post_type !== 'storyline' )
+			return $content;
+		
+		// only refactor for feeds and preview
+		if ( !is_feed() && !is_preview() )
 			return $content;
 		
 		$content = preg_replace_callback(
