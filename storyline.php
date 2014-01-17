@@ -64,7 +64,7 @@ class SMRT_Storyline {
 		// register hooks and filters	
 		add_action( 'init', array( $this, 'register_storyline' ) );
 		add_action( 'publish_storyline', array( $this, 'set_date_sort' ) );
-		add_filter( 'the_content', array( $this, 'modified_post_view' ) ); 
+		add_filter( 'the_content', array( $this, 'modified_post_view' ), 999 ); 
 		add_filter( 'the_content', array( $this, 'refactor_images' ), 99 ); 
 		add_filter( 'json_feed_item',  array( $this ,'json_feed_items_with_slides' ), 10, 4 );
 		
@@ -94,7 +94,7 @@ class SMRT_Storyline {
 		if ( 'storyline' !== $item['type'] )
 			return $item;
 		
-		$item['content'] = $this->split_content( $item['content'], true );
+		$item['content'] = $this->split_content( apply_filters( 'the_content', get_the_content() ) );
 		$item['last_modified'] = get_the_modified_time( json_feed_date_format() );
 		
 		$date_sort = get_post_meta( $id, '_date_sort', true );
@@ -180,19 +180,16 @@ class SMRT_Storyline {
 	 * @param string $content The text to convert
 	 * @return string[] An array of slides
 	 */
-    function split_content( $content, $apply_filters = false ) {
+    function split_content( $content ) {
 		if ( empty( $content ) ) {
 			return array();
 		}
 		
 		$content = preg_replace( '/<span id=\"more-.*\"><\/span>/u', "<!--more-->", $content );
 		$slides = explode( "<!--more-->", $content );
-		$slides = preg_replace("/$(\s*&nbsp;\s*)+/um", "", $slides); // clean up leading spacing on deach slide
-		if ( $apply_filters ) {
-			for ( $index = 0, $len = count( $slides ); $index < $len; $index ++) {
-				$slides[$index] = apply_filters( 'the_content', $slides[$index] );
-			}
-		}
+		$slides = preg_replace("/<p>&nbsp;<\/p>/um", "", $slides); // clean up empty paragraphs
+		$slides = preg_replace("/^(\s*<\/p>\s*)+/um", "", $slides); // clean up leading end paragraph tags
+		$slides = preg_replace("/^(\s*<p>\s*)+/um", "", $slides); // clean up trailing start paragraph tags
 		return $slides;
 	}
 	
@@ -376,15 +373,18 @@ class SMRT_Storyline {
 					// find optional caption
 					preg_match( '/<p class=\"wp-caption-text\">(.+)<\/p>/u', $html, $caption );
 					
-					// create the new div tag	
+					// create the new div tag
 					return '<div class="story-image'
 						. ( $href ? '-gallery' : '' )
 						. '"' 
 						. ' style="background-image: url(\'' . esc_url( $src[0] ) . '\');"'
 						. ( $href ? ' data-href="' . esc_url( $href[1] ) . '"' : '' )
 						. '>'
-						. ( $caption ? '<p class="caption">'. esc_html( $caption[1] ) . '</p>' : '' )
-						. '</div>';
+						. ( $caption && $href ? '<p class="caption">'. esc_html( $caption[1] ) . '</p>' : '' )
+						. '</div>'
+						. ( $caption && !$href? '<p class="caption">'. esc_html( $caption[1] ) . '</p>' : '' );
+
+					//return '{{{{ ' . ( $html ? $html : '' ) . ' }}}}';
 				} else {
 					return '<!-- missing image ' . esc_html( $id ) . ' -->';
 				}
