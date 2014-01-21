@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.2.7
+Version: 0.2.8
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.2.7' );
+define( 'SMRT_STORYLINE_VERSION', '0.2.8' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -50,8 +50,8 @@ class SMRT_Storyline {
 	 * @since 0.1.0
 	 *
 	 * @uses add_image_size() to register mobile thumbnails and feature images
-	 * @uses add_action()
-	 * @uses add_filter()
+	 * @uses add_action
+	 * @uses add_filter
 	 */
 	public function __construct() {
 		// register new image sizes
@@ -64,6 +64,7 @@ class SMRT_Storyline {
 		// register hooks and filters	
 		add_action( 'init', array( $this, 'register_storyline' ) );
 		add_action( 'publish_storyline', array( $this, 'set_date_sort' ) );
+		add_action( 'add_meta_boxes', array( $this, 'add_alerts_meta_box' ) );
 		add_filter( 'the_content', array( $this, 'modified_post_view' ), 999 ); 
 		add_filter( 'the_content', array( $this, 'refactor_images' ), 99 ); 
 		add_filter( 'json_feed_item',  array( $this ,'json_feed_items_with_slides' ), 10, 4 );
@@ -72,8 +73,18 @@ class SMRT_Storyline {
 		add_action( 'wp_ajax_smrt_topics', array( $this, 'smrt_topics_callback' ) );
 		add_action( 'wp_ajax_nopriv_smrt_topics', array( $this, 'smrt_topics_callback' ) );
 		
+		// register ajax handler for urban airship update
+		add_action( 'wp_ajax_smrt_push_ua_update', array ( $this, 'smrt_push_ua_update_callback' ) );
+		
 		// default to custom sort
 		add_action( 'pre_get_posts', array( $this, 'sort_by_date_sort' ) );
+		
+		// Add admin hooks for urban airship settings
+		if ( is_admin() ) {
+			add_action( 'admin_menu', array( $this, 'create_settings_menu' ) );
+			add_action( 'admin_init', array( $this, 'register_settings' ) );
+			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
+		}
 	}
 	
 	/**
@@ -81,9 +92,9 @@ class SMRT_Storyline {
 	 *
 	 * @since 0.2.0 
 	 *
-	 * @uses get_the_modified_time()
-	 * @uses get_post_thumbnail_id()
-	 * @uses wp_get_post_terms()
+	 * @uses get_the_modified_time
+	 * @uses get_post_thumbnail_id
+	 * @uses wp_get_post_terms
 	 * 
 	 * @param object @item The json feed item
 	 * @return object The updated json feed item
@@ -157,7 +168,7 @@ class SMRT_Storyline {
 	 *
 	 * @since 0.2.2
 	 *
-	 * @uses wp_get_attachment_image_src()
+	 * @uses wp_get_attachment_image_src
 	 *
 	 * @param object $item The json feed item
 	 * @param int $thumbnail_id The id of the featured image
@@ -198,8 +209,8 @@ class SMRT_Storyline {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @uses register_post_type()
-	 * @uses register_taxonomy()
+	 * @uses register_post_type
+	 * @uses register_taxonomy
 	 */
 	public function register_storyline() {
 		register_post_type( 'storyline', array(
@@ -425,7 +436,6 @@ class SMRT_Storyline {
 		if ( empty( $orderby ) && 'storyline' === $post_type ) {
 			$query->set( 'orderby', 'meta_value' );
 			$query->set( 'meta_key', '_date_sort' );
-			
 		}
 	}
 	
@@ -434,9 +444,9 @@ class SMRT_Storyline {
 	 *
 	 * @since 0.2.2
 	 *
-	 * @uses get_terms()
-	 * @uses wp_die()
-	 * @uses sanitize_text_field()
+	 * @uses get_terms
+	 * @uses wp_die
+	 * @uses sanitize_text_field
 	 */
 	public function smrt_topics_callback() {
 		$topics = get_terms( 'smrt-topic', array( 'orderby' => 'count', 'order' => 'DESC', 'number' => 6 ) );
@@ -445,5 +455,238 @@ class SMRT_Storyline {
 		echo sanitize_text_field( $_GET[ 'topics' ] ) . '(' . json_encode( $topics ) . ')';
 		wp_die();
 	}
+	
+	/*
+		-------- Urban Airship support for storyline below this comment ----------
+	*/
+	
+	/**
+	 * Create the settings page, contains fields for urban airship application.
+	 *
+	 * @since 0.2.8
+	 *
+	 * @uses add_options_page
+	 */
+	function create_settings_menu() {
+		$plugin_page = add_options_page( 'Storyline', 'Storyline', 'manage_options', 'storyline-settings', array( $this, 'settings_page' ) );
+	}
+	
+	/**
+	 * Register the Storyline settings, sections and fields
+	 *
+	 * @since 0.2.8
+	 * 
+	 * @uses register_setting
+	 * @uses add_settings_section
+	 * @uses add_settings_field
+	 */
+	function register_settings() {
+		register_setting( 'smrt_storyline_settings', 'smrt_storyline_settings', array( $this, 'sanitize_settings' ) );
+		add_settings_section( 'smrt_storyline_main', 'Storyline Plugin Settings', array( $this, 'settings_help' ), 'storyline-settings' );
+		add_settings_field( 'smrt_ua_app_id', 'Application ID', array( $this, 'render_app_id_setting'), 'storyline-settings', 'smrt_storyline_main' );
+		add_settings_field( 'smrt_ua_master_secret', 'Master Secret', array( $this, 'render_master_secret_setting') , 'storyline-settings', 'smrt_storyline_main' );
+	}
+	
+	/**
+	 * Enqueue the admin scripts, passing post ID parameter for update action
+	 *
+	 * @ since 0.2.8
+	 * 
+	 * @uses wp_enqueue_script
+	 * @uses plugin_url
+	 * @uses wp_localize_script
+	 */
+	function enqueue_admin_scripts() {
+		// Edit Page script for storyline
+		global $pagenow;
+		global $post;
+		
+		if ( 'post.php' === $pagenow && 'storyline' === $post->post_type ) {
+			wp_enqueue_script( 'smrt_storyline_ua_alerts', plugins_url( 'js/alerts.js', __FILE__ ) );
+			
+			//pass dynamic parameters
+			$params = array( 'postID' => $post->ID );
+			wp_localize_script( 'smrt_storyline_ua_alerts', 'smrt_alerts', $params );
+		}
+	}
+	
+	/**
+	 * Render the Storyline settings page
+	 *
+	 * @since 0.2.8
+	 *
+	 * @uses settings_fields
+	 * @uses do_settings_sections
+	 */
+	function settings_page() {
+		?>
+		<div class="wrap">
+			<?php screen_icon(); ?>
+			<h2>Storyline Settings</h2>
+			<form action="options.php" method="post">
+				<?php
+				settings_fields( 'smrt_storyline_settings' );
+				do_settings_sections( 'storyline-settings' );
+				?>
+				<input name="submit" type="submit" value="Save Changes" />
+			</form>
+		</div>
+		<?php
+	}
+	
+	/**
+	 * Render help text for Storyline settings page
+	 * 
+	 * @since 0.2.8
+	 */
+	function settings_help() {
+		echo '<p>Supply the AppID and Master secret for the Urban Airship application you wish to send update notices too.</p>';
+	}
+	
+	/**
+	 * Render application ID settings field
+	 *
+	 * @since 0.2.8
+	 *
+	 * @uses esc_attr
+	 */
+	function render_app_id_setting() {
+		$options = get_option( 'smrt_storyline_settings' );
+		$app_id = ( isset( $options['app_id'] ) ? $options['app_id'] : '' );
+		echo '<input id="smrt_ua_app_id" type="text" class="regular-text" name="smrt_storyline_settings[app_id]" value="' . esc_attr( $app_id ) . '"/>';
+	}
+	
+	/**
+	 * Render master secret settings field
+	 *
+	 * @since 0.2.8
+	 *
+	 * @uses esc_attr
+	 */
+	function render_master_secret_setting() {
+		$options = get_option( 'smrt_storyline_settings' );
+		$master_secret = ( isset( $options['master_secret'] ) ? $options['master_secret'] : '' );
+		echo '<input id="smrt_ua_master_secret" type="text" class="regular-text" name="smrt_storyline_settings[master_secret]" value="' . esc_attr( $master_secret ) . '"/>';
+	}
+	
+	/**
+	 * Sanitize input on settings form
+	 *
+	 * @since 0.2.8
+	 * 
+	 * @uses sanitize_text_field
+	 */
+	function sanitize_settings( $input ) {
+		$valid = array();
+		
+		if ( isset( $input['app_id'] ) ) {
+			$valid['app_id'] = sanitize_text_field( $input['app_id'] );
+		}
+		
+		if ( isset( $input['master_secret'] ) ) {
+			$valid['master_secret'] = sanitize_text_field( $input['master_secret'] );
+		}
+		
+		return $valid;
+	}
+	
+	/**
+	 * Display the Urban Airship update notification interface in Edit Post screen
+	 *
+	 * @since 0.2.8
+	 *
+	 * @uses current_user_can
+	 * @uses add_meta_box
+	 */
+	function add_alerts_meta_box( $post_type ) {
+		global $post;
+		
+		// Exit if not a storyline post, or not published yet
+		if ( 'storyline' !== $post_type || 'publish' !== $post->post_status )
+			return;
+		
+		// ensure only those who can publish, can see this box
+		if ( current_user_can( 'publish_posts' ) )
+			add_meta_box( 'update_alert_meta_box', 'Urban Airship Update Alert', array( $this, 'update_alert_meta_box' ), $post_type, 'side', 'low' );
+	}
+		
+	/**
+	 * Generating the update notification meta box
+	 *
+	 * @since 0.2.8
+	 */
+	function update_alert_meta_box(){
+		?>
+			<p id="update-status"></p>
+			<input name="submit" type="submit" value="Push Update" onClick="smrt_storyline_alerts_send_update(event);"/>
+		<?php
+	}
+	
+	/**
+	 * Ajax function to send push notification to Urban Airship
+	 *
+	 * @since 0.2.8
+	 *
+	 * @uses current_user_can
+	 * @uses get_option
+	 * @uses sanitize_text_field
+	 * @uses apply_filters
+	 * @uses wp_remote_post
+	 * @uses us_wp_error
+	 * @uses wp_die
+	 */
+	public function smrt_push_ua_update_callback() {
+		
+		if ( current_user_can( 'publish_posts' ) ) {
+			$result = '';
+			$postID = intval( urldecode( $_POST['postID'] ) );
+			if ( $postID ) {
+				$options = get_option( 'smrt_storyline_settings' );
+				$auth_combo = sanitize_text_field( $options['app_id'] ) . ':' . sanitize_text_field( $options['master_secret'] );
+				
+				// build push body as per v3 of Urban Airship push API 
+				// http://docs.urbanairship.com/reference/api/v3/push.html#push-object
+				$contents = array();
+				$contents['alert'] = 'Updated story';
+				$notification = array();
+				$notification['ios'] = $contents;
+				$notification['android'] = $contents;
+				$platforms = array( 'ios', 'android' );
+				$audience = array();
+				$audience['tag'] = strval( $postID );
+				
+				$push = array( 'audience' => $audience, 'notification' => $notification, 'device_types' => $platforms );
+				
+				// allow external modification of push data if required ever.
+				$push = apply_filters( 'smrt_storyline_update_push', $push );
+				
+				$json = json_encode ( $push );
+				$args = array(
+					'headers' => array( 
+						'Content-Type' => 'application/json',
+						'Accept' => 'application/vnd.urbanairship+json; version=3;',
+						'Authorization' => 'Basic ' . base64_encode( $auth_combo ) ),
+					'body' => $json
+				);
+				
+				// Send the push
+				$response = wp_remote_post( 'https://go.urbanairship.com/api/push', $args );
+				
+				if( is_wp_error( $response ) ) {
+					// typically this is the result of incorrect or missing app_id and master_secret
+					$error_message = $response->get_error_message();
+				 	$result = 'Error: ' . $error_message;
+				} else {
+					$result = $response['response']['code'];
+				}
+			}
+			else {
+				$result = 'No post ID found';
+			}
+			echo $result;
+			
+		}
+		wp_die();
+	} 
 }
 $smrt_storyline = new SMRT_Storyline();

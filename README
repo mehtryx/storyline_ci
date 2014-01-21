@@ -1,7 +1,7 @@
 === storyline ===
 Contributors: Edward de Groot, Donnie Marges, Waheed Ashraf, Keith Benedict, Goldwin Guenther
 Tested up to: 3.8
-Stable tag: 0.2.5
+Stable tag: 0.2.8
 License: MIT
 License URI: https://github.com/Postmedia/storyline/blob/master/LICENSE
 
@@ -15,11 +15,31 @@ Activate the plugin, Access the storyline menu off the main dashboard.
 
 == Changelog ==
 
+= 0.2.8 =
+
+* Added urban airship support
+
+
+= 0.2.7 =
+
+* bug fixes for embedded images
+* Change refactor to only happen for feeds and preview
+* escape caption
+* refactor images as div tags
+
+
+= 0.2.6 =
+
+* updates to sort, changed default sort unless specified
+* shorten the topic feed
+
+
 = 0.2.5 =
 
 * added css and js code to have more fluid layout for preview
 * changed esc_html to wp_kses in rendering of slide content
 * vip review fixes
+
 
 = 0.2.4 =
 
