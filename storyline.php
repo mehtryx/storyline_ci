@@ -618,7 +618,7 @@ class SMRT_Storyline {
 	function update_alert_meta_box(){
 		?>
 			<p id="update-status"></p>
-			<input name="submit" type="submit" value="Push Update" onClick="smrt_storyline_alerts_send_update(event);"/>
+			<input name="submit_update" type="submit" value="Push Update" onClick="smrt_storyline_alerts_send_update(event);"/>
 		<?php
 	}
 	
