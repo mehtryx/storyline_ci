@@ -490,7 +490,7 @@ class SMRT_Storyline {
 	/**
 	 * Resorts the posts when querying by edition
 	 *
-	 * @since 0.9.2
+	 * @since 0.2.9
 	 */
 	public function resort_edition_posts( $posts, $query ) {
 		$edition_var = $query->get( 'edition' );
