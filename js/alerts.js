@@ -5,12 +5,15 @@ function smrt_storyline_alerts_send_update(e) {
 		type: 'POST',
 		data: {
 			action: 'smrt_push_ua_update',
+			nonce: smrt_alerts.nonce,
 			postID: smrt_alerts.postID
 		}
-	}).success(function(data) {
-		console.log(data);
+	}).success(function(json) {
+		console.log(json);
+		response = JSON.parse(json);
+		smrt_alerts.nonce = response['nonce'];
 		
-		if(data === '202') {
+		if(response['result'] === 202) {
 			jQuery('#update-status').text('Sent!').css('color', 'green');
 		} else {
 			jQuery('#update-status').text('Oops! There was a problem!').css('color', 'red');
