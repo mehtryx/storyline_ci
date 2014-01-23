@@ -75,7 +75,7 @@ class SMRT_Storyline {
 		// support for query and sort by edition
 		add_filter( 'query_vars', array( $this, 'add_edition_query_var' ) );
 		add_action( 'pre_get_posts', array( $this, 'query_by_edition' ) );
-		add_filter( 'the_posts', array( $this, 'resort_edition_posts' ), 10, 2);
+		add_filter( 'the_posts', array( $this, 'resort_edition_posts' ), 10, 2 );
 		
 		// Add admin hooks for urban airship settings
 		if ( is_admin() ) {
@@ -453,7 +453,7 @@ class SMRT_Storyline {
 		
 		// use the edition date as a starting point, looking for the next post date
 		$edition = new DateTime( $edition_var );
-		$edition->setTime( 0 , 0 , 0);
+		$edition->setTime( 0 , 0 , 0 );
 			
 		// since post dates include time, we need to look for items before the day after
 		$before = clone $edition;
@@ -473,7 +473,7 @@ class SMRT_Storyline {
 		$latest = get_posts( $args );
 		if ( !empty( $latest ) ) {
 			$edition = new DateTime( $latest[0]->post_date );
-			$edition->setTime( 0, 0, 0);
+			$edition->setTime( 0, 0, 0 );
 			$query->query['edition'] = $edition->format( 'Y-m-d' );
 			$query->set( 'edition', $edition->format( 'Y-m-d' ) );
 		}
