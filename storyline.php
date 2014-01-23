@@ -54,16 +54,13 @@ class SMRT_Storyline {
 	 * @uses add_filter
 	 */
 	public function __construct() {
-		// register new image sizes
-		add_image_size( 'smrt-phone-thumb', 95, 95, true );
-		add_image_size( 'smrt-phone-thumb-x2', 190, 190, true );
-		add_image_size( 'smrt-phone-feature', 320, 192, true );
-		add_image_size( 'smrt-phone-feature-x2', 640, 384, true );
-		add_image_size( 'smrt-phone-embedded', 640, 9999, false );
 		
-		// register hooks and filters	
+		// register hooks and filters
+		add_action( 'after_setup_theme', array( $this, 'add_custom_image_sizes' ) );
 		add_action( 'init', array( $this, 'register_storyline' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_alerts_meta_box' ) );
+		// the intent in the priority '999' is to push this to the very last, this view is specialized to a simulated
+		// mobile preview, which needs to account for any and all changes by other plugins, themes.  999 seemed like a good number.
 		add_filter( 'the_content', array( $this, 'modified_post_view' ), 999 ); 
 		add_filter( 'the_content', array( $this, 'refactor_images' ), 99 ); 
 		add_filter( 'json_feed_item',  array( $this ,'json_feed_items_with_slides' ), 10, 4 );
@@ -86,6 +83,22 @@ class SMRT_Storyline {
 			add_action( 'admin_init', array( $this, 'register_settings' ) );
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 		}
+	}
+	
+	/**
+	 * Adds the custom image sizes used by storyline
+	 *
+	 * @since 0.2.9
+	 *
+	 * @uses add_image_size
+	 */
+	function add_custom_image_sizes() {
+		// register new image sizes
+		add_image_size( 'smrt-phone-thumb', 95, 95, true );
+		add_image_size( 'smrt-phone-thumb-x2', 190, 190, true );
+		add_image_size( 'smrt-phone-feature', 320, 192, true );
+		add_image_size( 'smrt-phone-feature-x2', 640, 384, true );
+		add_image_size( 'smrt-phone-embedded', 640, 9999, false );
 	}
 	
 	/**
@@ -154,8 +167,8 @@ class SMRT_Storyline {
 		}
 		
 		// return topics
-		$item['topics'] = Array();
-		$topics = wp_get_post_terms( 'smrt-topic' );
+		$item['topics'] = array();
+		$topics = get_the_terms( $id, 'smrt-topic' );
 		if ( is_array( $topics ) ) {
 			foreach( $topics as $topic ) {
 				$item['topics'][] = array (
@@ -300,12 +313,12 @@ class SMRT_Storyline {
 		
 		if( $post->post_type !== 'storyline' || !is_preview() )
 			return $content;
+			
+		// This header is hardcoded, there is no variables in it to escape
+		$hardcoded_header = "<div class='x-container x-toolbar-dark x-toolbar x-navigation-bar x-stretched x-paint-monitored x-layout-box-item' id='ext-titlebar-1'><div class='x-body' id='ext-element-13'><div class='x-center' id='ext-element-14'><div class='x-unsized x-title x-floating' id='ext-title-1' style='z-index: 8 !important;'><div class='x-innerhtml' id='ext-element-12'></div></div></div><div class='x-inner x-toolbar-inner x-horizontal x-align-stretch x-pack-start x-layout-box' id='ext-element-9'><div class='x-container x-size-monitored x-paint-monitored x-layout-box-item x-stretched' id='ext-container-1' style='position: relative;'><div class='x-inner x-horizontal x-align-center x-pack-start x-layout-box' id='ext-element-10' style=''><div class='x-img x-img-image x-img-background x-sized x-paint-monitored x-size-monitored x-layout-box-item' id='nav_btn' style='width: 50px !important; height: 50px !important; background-image: url('/wp-content/plugins/storyline/img/toolbar/icon-menu.png');'><div class='x-paint-monitor overflowchange'></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 51px; height: 51px;'></div></div><div class='shrink'><div style='width: 50px; height: 50px;'></div></div></div></div><div class='x-img x-img-image x-img-background x-sized x-paint-monitored x-size-monitored x-layout-box-item' id='nav_icon' style='width: 42px !important; height: 48px !important; background-image: url('/wp-content/plugins/storyline/img/logo.png');'><div class='x-paint-monitor overflowchange'></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 43px; height: 49px;'></div></div><div class='shrink'><div style='width: 42px; height: 48px;'></div></div></div></div></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 93px; height: 51px;'></div></div><div class='shrink'><div style='width: 92px; height: 50px;'></div></div></div><div class='x-paint-monitor overflowchange'></div></div><div class='x-size-monitored x-paint-monitored x-layout-box-item x-flexed x-stretched' id='ext-component-1' style='position: relative; -webkit-box-flex: 1;'><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 1128.71875px; height: 51px;'></div></div><div class='shrink'><div style='width: 1127.71875px; height: 50px;'></div></div></div><div class='x-paint-monitor overflowchange'></div></div><div class='x-container x-size-monitored x-paint-monitored x-layout-box-item x-stretched' id='ext-container-2' style='position: relative;'><div class='x-inner x-horizontal x-align-center x-pack-start x-layout-box' id='ext-element-11' style=''><div class='x-img x-img-image x-img-background x-sized x-paint-monitored x-size-monitored x-layout-box-item' id='bt_alert' style='width: 50px !important; height: 50px !important; background-image: url('/wp-content/plugins/storyline/img/toolbar/icon-alerts-active.png');'><div class='x-paint-monitor overflowchange'></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 51px; height: 51px;'></div></div><div class='shrink'><div style='width: 50px; height: 50px;'></div></div></div></div></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 51px; height: 51px;'></div></div><div class='shrink'><div style='width: 50px; height: 50px;'></div></div></div><div class='x-paint-monitor overflowchange'></div></div></div></div><div class='x-paint-monitor overflowchange'></div></div>";
 		
-		$allowed_tags = wp_kses_allowed_html( 'post' );
-		
-		$header = "<div class='x-container x-toolbar-dark x-toolbar x-navigation-bar x-stretched x-paint-monitored x-layout-box-item' id='ext-titlebar-1'><div class='x-body' id='ext-element-13'><div class='x-center' id='ext-element-14'><div class='x-unsized x-title x-floating' id='ext-title-1' style='z-index: 8 !important;'><div class='x-innerhtml' id='ext-element-12'></div></div></div><div class='x-inner x-toolbar-inner x-horizontal x-align-stretch x-pack-start x-layout-box' id='ext-element-9'><div class='x-container x-size-monitored x-paint-monitored x-layout-box-item x-stretched' id='ext-container-1' style='position: relative;'><div class='x-inner x-horizontal x-align-center x-pack-start x-layout-box' id='ext-element-10' style=''><div class='x-img x-img-image x-img-background x-sized x-paint-monitored x-size-monitored x-layout-box-item' id='nav_btn' style='width: 50px !important; height: 50px !important; background-image: url('/wp-content/plugins/storyline/img/toolbar/icon-menu.png');'><div class='x-paint-monitor overflowchange'></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 51px; height: 51px;'></div></div><div class='shrink'><div style='width: 50px; height: 50px;'></div></div></div></div><div class='x-img x-img-image x-img-background x-sized x-paint-monitored x-size-monitored x-layout-box-item' id='nav_icon' style='width: 42px !important; height: 48px !important; background-image: url('/wp-content/plugins/storyline/img/logo.png');'><div class='x-paint-monitor overflowchange'></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 43px; height: 49px;'></div></div><div class='shrink'><div style='width: 42px; height: 48px;'></div></div></div></div></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 93px; height: 51px;'></div></div><div class='shrink'><div style='width: 92px; height: 50px;'></div></div></div><div class='x-paint-monitor overflowchange'></div></div><div class='x-size-monitored x-paint-monitored x-layout-box-item x-flexed x-stretched' id='ext-component-1' style='position: relative; -webkit-box-flex: 1;'><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 1128.71875px; height: 51px;'></div></div><div class='shrink'><div style='width: 1127.71875px; height: 50px;'></div></div></div><div class='x-paint-monitor overflowchange'></div></div><div class='x-container x-size-monitored x-paint-monitored x-layout-box-item x-stretched' id='ext-container-2' style='position: relative;'><div class='x-inner x-horizontal x-align-center x-pack-start x-layout-box' id='ext-element-11' style=''><div class='x-img x-img-image x-img-background x-sized x-paint-monitored x-size-monitored x-layout-box-item' id='bt_alert' style='width: 50px !important; height: 50px !important; background-image: url('/wp-content/plugins/storyline/img/toolbar/icon-alerts-active.png');'><div class='x-paint-monitor overflowchange'></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 51px; height: 51px;'></div></div><div class='shrink'><div style='width: 50px; height: 50px;'></div></div></div></div></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 51px; height: 51px;'></div></div><div class='shrink'><div style='width: 50px; height: 50px;'></div></div></div><div class='x-paint-monitor overflowchange'></div></div></div></div><div class='x-paint-monitor overflowchange'></div></div>";
-		
-		$adBanner = "<div class='adBanner'></div>";	
+		// Hardcoded, no variables to escape
+		$hardcoded_adbanner = "<div class='adBanner'></div>";	
 		
 		wp_register_style( 'storylinestyle', plugins_url( 'css/style.css', __FILE__ ) );
 		wp_register_style( 'swipercss', plugins_url( 'css/idangerous.swiper.css', __FILE__ ) );
@@ -332,7 +345,7 @@ class SMRT_Storyline {
 					</div>
 					<div class='device-wrapper'>
 						<div class='viewport-wrapper' >
-							" . $header . "
+							" . $hardcoded_header . "
 							<div class='swiper-container'>
 								<div class='swiper-wrapper'>
 									<div class='swiper-slide'>
@@ -340,11 +353,11 @@ class SMRT_Storyline {
 											<div class='flex-container'>" .
 												( is_array( $slide_image ) ? "<div class='story_image' style='background-image: url(" . esc_url( $slide_image[0] ) . ");'></div>" : "" ) . "
 												<div class='first_story_content'>
-													<div class='story_headline'><h3>" . $post->post_title  . "</h3></div>
+													<div class='story_headline'><h3>" . esc_html( $post->post_title )  . "</h3></div>
 													<div class='timestamp'><span class='updated'>Updated: </span><span>11:40 AM</span></div>
 													<div class='story_abstract'>" .	$slides[0] . "</div>
 												</div>
-												<div class='adBannerPagination'><div class='statusbar'>1/" . ( count( $slides ) ) . "</div>" . $adBanner .
+												<div class='adBannerPagination'><div class='statusbar'>1/" . ( count( $slides ) ) . "</div>" . $hardcoded_adbanner .
 											"</div></div>
 										</div>
 									</div>"
@@ -517,7 +530,7 @@ class SMRT_Storyline {
 		$topics = get_terms( 'smrt-topic', array( 'orderby' => 'count', 'order' => 'DESC', 'number' => 6 ) );
 		
 		header( 'Content-Type: application/javascript', true );
-		echo sanitize_text_field( $_GET[ 'topics' ] ) . '(' . json_encode( $topics ) . ')';
+		echo esc_attr( $_GET[ 'topics' ] ) . '(' . json_encode( $topics ) . ')';
 		wp_die();
 	}
 	
@@ -567,11 +580,12 @@ class SMRT_Storyline {
 		global $post;
 		
 		if ( 'post.php' === $pagenow && 'storyline' === $post->post_type ) {
-			wp_enqueue_script( 'smrt_storyline_ua_alerts', plugins_url( 'js/alerts.js', __FILE__ ) );
+			wp_enqueue_script( 'smrt-storyline-ua-alerts', plugins_url( 'js/alerts.js', __FILE__ ) );
 			
 			//pass dynamic parameters
-			$params = array( 'postID' => $post->ID );
-			wp_localize_script( 'smrt_storyline_ua_alerts', 'smrt_alerts', $params );
+			$nonce = wp_create_nonce( 'smrt_storyline_ajax_nonce' );
+			$params = array( 'nonce' => $nonce, 'postID' => $post->ID );
+			wp_localize_script( 'smrt-storyline-ua-alerts', 'smrt_alerts', $params );
 		}
 	}
 	
@@ -701,9 +715,16 @@ class SMRT_Storyline {
 	 * @uses wp_die
 	 */
 	public function smrt_push_ua_update_callback() {
+		// check nonce
+		$nonce = 0;
+		$result = '';
 		
-		if ( current_user_can( 'publish_posts' ) ) {
-			$result = '';
+		if ( isset( $_POST['nonce'] ) ) {
+			if ( wp_verify_none( $_POST['nonce'], 'smrt_storyline_ajax_nonce' ) )
+				$nonce = wp_create_nonce( 'smrt_storyline_ajax_nonce' );
+		}
+		
+		if ( current_user_can( 'publish_posts' ) && $nonce ) {
 			$postID = intval( urldecode( $_POST['postID'] ) );
 			if ( $postID ) {
 				$options = get_option( 'smrt_storyline_settings' );
@@ -748,9 +769,9 @@ class SMRT_Storyline {
 			else {
 				$result = 'No post ID found';
 			}
-			echo $result;
-			
 		}
+		$response = array( 'nonce' => $nonce, 'result' => $result );
+		echo json_encode( $response );
 		wp_die();
 	} 
 }
