@@ -16,7 +16,19 @@ Activate the plugin, Access the storyline menu off the main dashboard.
 == Changelog ==
 
 = 0.2.9 =
-* Vip fixes in progress, will annotate these once all changes are finalized.
+* Changed sanitize to escape function in smrt_topics_callback
+* escaped output of smrt_push_ua_update_callback
+* nonce added to smrt_push_ua_update_callback
+* changed to new sort via editions param, removed use of meta data in query sort
+* changed wp_get_post_terms to get_the_terms
+* fixed output escaping on story_headline $post->post_title
+* added comment and renamed $header to $hardcoded_header and did same to the $adbanner var.
+* moved add_image_size to seperate function hooked in on after_setup_theme
+* lowercase a on array() declare
+* added comment on the non-standard priority,
+* changed the add_image_url function, returns image url and doesnt modify $item
+* removed $allowed_tags as currently unused
+
 
 = 0.2.8 =
 
