@@ -118,7 +118,7 @@ class SMRT_Storyline {
 		// only update posts of type storyline
 		if ( 'storyline' !== $item['type'] )
 			return $item;
-				
+		
 		$item['content'] = $this->split_content( apply_filters( 'the_content', get_the_content() ) );
 		$item['last_modified'] = get_the_modified_time( json_feed_date_format() );
 		
@@ -160,10 +160,10 @@ class SMRT_Storyline {
 		// specify thumbnail and overwrite featured image url
 		$thumbnail_id = get_post_thumbnail_id();
 		if ( !empty( $thumbnail_id ) ) {
-			$item = $this->add_image_url( $item, $thumbnail_id, 'thumbnail_url', 'smrt-phone-thumb' );
-			$item = $this->add_image_url( $item, $thumbnail_id, 'thumbnail_url_x2', 'smrt-phone-thumb-x2' );
-			$item = $this->add_image_url( $item, $thumbnail_id, 'featured_image_url', 'smrt-phone-feature' );
-			$item = $this->add_image_url( $item, $thumbnail_id, 'featured_image_url_x2', 'smrt-phone-feature-x2' );
+			$item['thumbnail_url']         = $this->add_image_url( $thumbnail_id, 'smrt-phone-thumb' );
+			$item['thumbnail_url_x2']      = $this->add_image_url( $thumbnail_id, 'smrt-phone-thumb-x2' );
+			$item['featured_image_url']    = $this->add_image_url( $thumbnail_id, 'smrt-phone-feature' );
+			$item['featured_image_url_x2'] = $this->add_image_url( $thumbnail_id, 'smrt-phone-feature-x2' );
 		}
 		
 		// return topics
@@ -178,29 +178,23 @@ class SMRT_Storyline {
 				);
 			}
 		}
-		
 		return $item;
 	}
 	
 	/**
-	 * Adds the specified featured thumbnail size to a json feed item
+	 * Returns the specified featured thumbnail size image url
 	 *
-	 * @since 0.2.2
+	 * @since 0.2.9
 	 *
 	 * @uses wp_get_attachment_image_src
 	 *
-	 * @param object $item The json feed item
 	 * @param int $thumbnail_id The id of the featured image
-	 * @param string $field The name of the field to store within json feed item
 	 * @param string $size The image size to look for
-	 * @return object The updated json feed item
+	 * @return image url
 	 */
-	function add_image_url( $item, $thumbnail_id, $field, $size ) {
+	function add_image_url( $thumbnail_id, $size ) {
 		$image = wp_get_attachment_image_src( $thumbnail_id, $size );
-		if ( !empty( $image ) ) {
-			$item[$field] = $image[0];
-		}
-		return $item;
+		return $image[0];
 	}
 	
 	/**
@@ -214,7 +208,6 @@ class SMRT_Storyline {
 		if ( empty( $content ) ) {
 			return array();
 		}
-		
 		$content = preg_replace( '/<span id=\"more-.*\"><\/span>/u', "<!--more-->", $content );
 		$slides = explode( "<!--more-->", $content );
 		$slides = preg_replace("/<p>&nbsp;<\/p>/um", "", $slides); // clean up empty paragraphs
@@ -305,15 +298,13 @@ class SMRT_Storyline {
 	 * @uses get_the_post_thumbnail_id
 	 * @uses wp_get_attachment_image_src
 	 * @uses esc_url
-	 * @uses wp_kses
-	 * @uses wp_kses_allowed_html
 	 */
 	public function modified_post_view( $content ) {
 		global $post;
 		
 		if( $post->post_type !== 'storyline' || !is_preview() )
 			return $content;
-			
+		
 		// This header is hardcoded, there is no variables in it to escape
 		$hardcoded_header = "<div class='x-container x-toolbar-dark x-toolbar x-navigation-bar x-stretched x-paint-monitored x-layout-box-item' id='ext-titlebar-1'><div class='x-body' id='ext-element-13'><div class='x-center' id='ext-element-14'><div class='x-unsized x-title x-floating' id='ext-title-1' style='z-index: 8 !important;'><div class='x-innerhtml' id='ext-element-12'></div></div></div><div class='x-inner x-toolbar-inner x-horizontal x-align-stretch x-pack-start x-layout-box' id='ext-element-9'><div class='x-container x-size-monitored x-paint-monitored x-layout-box-item x-stretched' id='ext-container-1' style='position: relative;'><div class='x-inner x-horizontal x-align-center x-pack-start x-layout-box' id='ext-element-10' style=''><div class='x-img x-img-image x-img-background x-sized x-paint-monitored x-size-monitored x-layout-box-item' id='nav_btn' style='width: 50px !important; height: 50px !important; background-image: url('/wp-content/plugins/storyline/img/toolbar/icon-menu.png');'><div class='x-paint-monitor overflowchange'></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 51px; height: 51px;'></div></div><div class='shrink'><div style='width: 50px; height: 50px;'></div></div></div></div><div class='x-img x-img-image x-img-background x-sized x-paint-monitored x-size-monitored x-layout-box-item' id='nav_icon' style='width: 42px !important; height: 48px !important; background-image: url('/wp-content/plugins/storyline/img/logo.png');'><div class='x-paint-monitor overflowchange'></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 43px; height: 49px;'></div></div><div class='shrink'><div style='width: 42px; height: 48px;'></div></div></div></div></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 93px; height: 51px;'></div></div><div class='shrink'><div style='width: 92px; height: 50px;'></div></div></div><div class='x-paint-monitor overflowchange'></div></div><div class='x-size-monitored x-paint-monitored x-layout-box-item x-flexed x-stretched' id='ext-component-1' style='position: relative; -webkit-box-flex: 1;'><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 1128.71875px; height: 51px;'></div></div><div class='shrink'><div style='width: 1127.71875px; height: 50px;'></div></div></div><div class='x-paint-monitor overflowchange'></div></div><div class='x-container x-size-monitored x-paint-monitored x-layout-box-item x-stretched' id='ext-container-2' style='position: relative;'><div class='x-inner x-horizontal x-align-center x-pack-start x-layout-box' id='ext-element-11' style=''><div class='x-img x-img-image x-img-background x-sized x-paint-monitored x-size-monitored x-layout-box-item' id='bt_alert' style='width: 50px !important; height: 50px !important; background-image: url('/wp-content/plugins/storyline/img/toolbar/icon-alerts-active.png');'><div class='x-paint-monitor overflowchange'></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 51px; height: 51px;'></div></div><div class='shrink'><div style='width: 50px; height: 50px;'></div></div></div></div></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 51px; height: 51px;'></div></div><div class='shrink'><div style='width: 50px; height: 50px;'></div></div></div><div class='x-paint-monitor overflowchange'></div></div></div></div><div class='x-paint-monitor overflowchange'></div></div>";
 		
@@ -446,7 +437,7 @@ class SMRT_Storyline {
 		if ( is_admin() )
 			 return;
 		
-		// only apply when editio var is set
+		// only apply when edition var is set
 		$edition_var = $query->get( 'edition' );
 		if ( empty( $edition_var ) )
 			return;
@@ -467,7 +458,6 @@ class SMRT_Storyline {
 		
 		// remove edition to prevent recursive requests
 		unset( $args['edition'] );
-		//dbgx_trace_var( $args );
 		
 		// if a post was returned, use it's date as the edition date
 		$latest = get_posts( $args );
@@ -483,8 +473,6 @@ class SMRT_Storyline {
 		$query->set( 'year' , $edition->format( 'Y' ) );
 		$query->set( 'monthnum' , $edition->format( 'm' ) );
 		$query->set( 'day' , $edition->format( 'd' ) );
-		
-		//dbgx_trace_var( $query, 'smrt_query' );
 	}
 	
 	/**
