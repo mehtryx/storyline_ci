@@ -118,7 +118,7 @@ class SMRT_Storyline {
 		// only update posts of type storyline
 		if ( 'storyline' !== $item['type'] )
 			return $item;
-				
+		
 		$item['content'] = $this->split_content( apply_filters( 'the_content', get_the_content() ) );
 		$item['last_modified'] = get_the_modified_time( json_feed_date_format() );
 		
@@ -160,10 +160,10 @@ class SMRT_Storyline {
 		// specify thumbnail and overwrite featured image url
 		$thumbnail_id = get_post_thumbnail_id();
 		if ( !empty( $thumbnail_id ) ) {
-			$item = $this->add_image_url( $item, $thumbnail_id, 'thumbnail_url', 'smrt-phone-thumb' );
-			$item = $this->add_image_url( $item, $thumbnail_id, 'thumbnail_url_x2', 'smrt-phone-thumb-x2' );
-			$item = $this->add_image_url( $item, $thumbnail_id, 'featured_image_url', 'smrt-phone-feature' );
-			$item = $this->add_image_url( $item, $thumbnail_id, 'featured_image_url_x2', 'smrt-phone-feature-x2' );
+			$item['thumbnail_url']         = $this->add_image_url( $thumbnail_id, 'smrt-phone-thumb' );
+			$item['thumbnail_url_x2']      = $this->add_image_url( $thumbnail_id, 'smrt-phone-thumb-x2' );
+			$item['featured_image_url']    = $this->add_image_url( $thumbnail_id, 'smrt-phone-feature' );
+			$item['featured_image_url_x2'] = $this->add_image_url( $thumbnail_id, 'smrt-phone-feature-x2' );
 		}
 		
 		// return topics
@@ -178,29 +178,23 @@ class SMRT_Storyline {
 				);
 			}
 		}
-		
 		return $item;
 	}
 	
 	/**
-	 * Adds the specified featured thumbnail size to a json feed item
+	 * Returns the specified featured thumbnail size image url
 	 *
-	 * @since 0.2.2
+	 * @since 0.2.9
 	 *
 	 * @uses wp_get_attachment_image_src
 	 *
-	 * @param object $item The json feed item
 	 * @param int $thumbnail_id The id of the featured image
-	 * @param string $field The name of the field to store within json feed item
 	 * @param string $size The image size to look for
-	 * @return object The updated json feed item
+	 * @return image url
 	 */
-	function add_image_url( $item, $thumbnail_id, $field, $size ) {
+	function add_image_url( $thumbnail_id, $size ) {
 		$image = wp_get_attachment_image_src( $thumbnail_id, $size );
-		if ( !empty( $image ) ) {
-			$item[$field] = $image[0];
-		}
-		return $item;
+		return $image[0];
 	}
 	
 	/**
@@ -214,7 +208,6 @@ class SMRT_Storyline {
 		if ( empty( $content ) ) {
 			return array();
 		}
-		
 		$content = preg_replace( '/<span id=\"more-.*\"><\/span>/u', "<!--more-->", $content );
 		$slides = explode( "<!--more-->", $content );
 		$slides = preg_replace("/<p>&nbsp;<\/p>/um", "", $slides); // clean up empty paragraphs
@@ -305,8 +298,6 @@ class SMRT_Storyline {
 	 * @uses get_the_post_thumbnail_id
 	 * @uses wp_get_attachment_image_src
 	 * @uses esc_url
-	 * @uses wp_kses
-	 * @uses wp_kses_allowed_html
 	 */
 	public function modified_post_view( $content ) {
 		global $post;
@@ -446,7 +437,7 @@ class SMRT_Storyline {
 		if ( is_admin() )
 			 return;
 		
-		// only apply when editio var is set
+		// only apply when edition var is set
 		$edition_var = $query->get( 'edition' );
 		if ( empty( $edition_var ) )
 			return;
@@ -467,7 +458,6 @@ class SMRT_Storyline {
 		
 		// remove edition to prevent recursive requests
 		unset( $args['edition'] );
-		//dbgx_trace_var( $args );
 		
 		// if a post was returned, use it's date as the edition date
 		$latest = get_posts( $args );
@@ -483,8 +473,6 @@ class SMRT_Storyline {
 		$query->set( 'year' , $edition->format( 'Y' ) );
 		$query->set( 'monthnum' , $edition->format( 'm' ) );
 		$query->set( 'day' , $edition->format( 'd' ) );
-		
-		//dbgx_trace_var( $query, 'smrt_query' );
 	}
 	
 	/**
