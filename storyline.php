@@ -58,7 +58,6 @@ class SMRT_Storyline {
 		// register hooks and filters
 		add_action( 'after_setup_theme', array( $this, 'add_custom_image_sizes' ) );
 		add_action( 'init', array( $this, 'register_storyline' ) );
-		add_action( 'publish_storyline', array( $this, 'set_date_sort' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_alerts_meta_box' ) );
 		// the intent in the priority '999' is to push this to the very last, this view is specialized to a simulated
 		// mobile preview, which needs to account for any and all changes by other plugins, themes.  999 seemed like a good number.
@@ -73,8 +72,10 @@ class SMRT_Storyline {
 		// register ajax handler for urban airship update
 		add_action( 'wp_ajax_smrt_push_ua_update', array ( $this, 'smrt_push_ua_update_callback' ) );
 		
-		// default to custom sort
-		add_action( 'pre_get_posts', array( $this, 'sort_by_date_sort' ) );
+		// support for query and sort by edition
+		add_filter( 'query_vars', array( $this, 'add_edition_query_var' ) );
+		add_action( 'pre_get_posts', array( $this, 'query_by_edition' ) );
+		add_filter( 'the_posts', array( $this, 'resort_edition_posts' ), 10, 2 );
 		
 		// Add admin hooks for urban airship settings
 		if ( is_admin() ) {
@@ -113,21 +114,26 @@ class SMRT_Storyline {
 	 * @return object The updated json feed item
 	 */
 	public function json_feed_items_with_slides( $item, $id, $query_args, $json_feed ) {
-		
+				
 		// only update posts of type storyline
 		if ( 'storyline' !== $item['type'] )
 			return $item;
-		
+				
 		$item['content'] = $this->split_content( apply_filters( 'the_content', get_the_content() ) );
 		$item['last_modified'] = get_the_modified_time( json_feed_date_format() );
 		
-		$date_sort = get_post_meta( $id, '_date_sort', true );
-		if ( false === $date_sort ) {
-			$item['date_sort'] = $item['date'];
+		// include custom sort parameter
+		static $edition;
+		if ( empty( $edition ) && isset( $query_args['edition'] ) ) {
+			$edition = new DateTime( $query_args['edition'] );
+			$edition->setTime( 23 , 59 , 59);
 		}
-		else {
-			$new_date = new DateTime( $date_sort );
-			$item['date_sort'] = $new_date->format( json_feed_date_format() );
+		
+		if ( empty( $edition ) ) {
+			$item['date_sort'] = $item['date'];
+		} else {
+			$item['date_sort'] = $edition->format( json_feed_date_format() );
+			$edition->sub( new DateInterval( 'PT1M' ) );
 		}
 		
 		// include post format
@@ -418,38 +424,97 @@ class SMRT_Storyline {
 	}
 	
 	/**
-	 * Saves the date only (no time) in custom field for sorting
+	 * Registers support for a custom query var named edition
 	 *
-	 * @since 0.2.3
-	 *
-	 * @uses get_post
-	 * @uses update_post_meta
+	 * @since 0.2.9
 	 */
-	public function set_date_sort( $post_id ) {
-		$post = get_post( $post_id );
-		$date_sort = new DateTime( $post->post_date );
-		$date_sort->setTime( 0, 0, 0 );
-		if ( !empty( $post->menu_order ) ) {
-			$date_sort->add( new DateInterval( 'P1D' ) );
-			$date_sort->sub( new DateInterval( 'PT' . $post->menu_order . 'M' ) );
-		}
-		update_post_meta( $post_id, '_date_sort', $date_sort->format( 'Y-m-d H:i:s' ) );
+	public function add_edition_query_var( $qvars ) {
+		$qvars[] = 'edition';
+		return $qvars;
 	}
 	
 	/**
-	 * defaults to sorting storylines by custom field _date_sort
-	 * this purposely changes the default sort for the admin as well
+	 * implements the edition query when present
 	 *
-	 * @since 0.2.6
+	 * @since 0.2.9
+	 *
+	 * @uses get_posts()
 	 */
-	public function sort_by_date_sort( $query ) {
+	public function query_by_edition( $query ) {
 		
-		$orderby = $query->get( 'orderby' );
-		$post_type = $query->get( 'post_type' );
-		if ( empty( $orderby ) && 'storyline' === $post_type ) {
-			$query->set( 'orderby', 'meta_value' );
-			$query->set( 'meta_key', '_date_sort' );
+		// don't apply to admin pages
+		if ( is_admin() )
+			 return;
+		
+		// only apply when editio var is set
+		$edition_var = $query->get( 'edition' );
+		if ( empty( $edition_var ) )
+			return;
+		
+		// use the edition date as a starting point, looking for the next post date
+		$edition = new DateTime( $edition_var );
+		$edition->setTime( 0 , 0 , 0 );
+			
+		// since post dates include time, we need to look for items before the day after
+		$before = clone $edition;
+		$before->add( new DateInterval( 'P1D' ) );
+		
+		$args = $query->query;
+		$args['posts_per_page'] = 1;
+		$args['date_query'] = array( array(
+			'before' => $before->format( 'Y-m-d' )
+		) ) ;
+		
+		// remove edition to prevent recursive requests
+		unset( $args['edition'] );
+		//dbgx_trace_var( $args );
+		
+		// if a post was returned, use it's date as the edition date
+		$latest = get_posts( $args );
+		if ( !empty( $latest ) ) {
+			$edition = new DateTime( $latest[0]->post_date );
+			$edition->setTime( 0, 0, 0 );
+			$query->query['edition'] = $edition->format( 'Y-m-d' );
+			$query->set( 'edition', $edition->format( 'Y-m-d' ) );
 		}
+		
+		// modify the original query to filter for a single day
+		$query->set( 'nopaging', true );
+		$query->set( 'year' , $edition->format( 'Y' ) );
+		$query->set( 'monthnum' , $edition->format( 'm' ) );
+		$query->set( 'day' , $edition->format( 'd' ) );
+		
+		//dbgx_trace_var( $query, 'smrt_query' );
+	}
+	
+	/**
+	 * Resorts the posts when querying by edition
+	 *
+	 * @since 0.2.9
+	 */
+	public function resort_edition_posts( $posts, $query ) {
+		$edition_var = $query->get( 'edition' );
+		if ( empty( $edition_var ) ) return $posts;
+		
+		// sort returned posts by menu order first and then by date (desc)
+		// items with no menu_order specified (zero) are pushed to the end
+		usort( $posts, function( $a, $b ) {
+			if( $a->menu_order === $b->menu_order ) {
+				$date_a = new DateTime( $a->post_date );
+				$date_b = new DateTime( $b->post_date );
+				if ( $date_a == $date_b ) {
+					return 0;
+				} else {
+					return $date_a > $date_b ? -1 : 1;
+				}
+			} else {
+				$order_a = empty( $a->menu_order ) ? 9999 : $a->menu_order;
+				$order_b = empty( $b->menu_order ) ? 9999 : $b->menu_order;
+				return $order_a < $order_b ? -1 : 1;
+			}
+		});
+		
+		return $posts;
 	}
 	
 	/**
