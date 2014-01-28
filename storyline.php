@@ -208,11 +208,11 @@ class SMRT_Storyline {
 		if ( empty( $content ) ) {
 			return array();
 		}
-		$content = preg_replace( '/<span id=\"more-.*\"><\/span>/u', "<!--more-->", $content );
+		$content = preg_replace( '/<span id=\"more-.*\"><\/span>/uim', "<!--more-->", $content );
+		$content = preg_replace( '/<!--more-->\\s*<\/p>/uim', '</p><!--more-->', $content);
+		$content = preg_replace( '/<p>\\s*(&nbsp;)?\\s*<\/p>/uim', "", $content); // clean up empty paragraphs
 		$slides = explode( "<!--more-->", $content );
-		$slides = preg_replace("/<p>&nbsp;<\/p>/um", "", $slides); // clean up empty paragraphs
-		$slides = preg_replace("/^(\s*<\/p>\s*)+/um", "", $slides); // clean up leading end paragraph tags
-		$slides = preg_replace("/^(\s*<p>\s*)+/um", "", $slides); // clean up trailing start paragraph tags
+		$slides = array($content);
 		return $slides;
 	}
 	
@@ -395,8 +395,8 @@ class SMRT_Storyline {
 					preg_match( '/<p class=\"wp-caption-text\">(.+)<\/p>/u', $html, $caption );
 					
 					// create the new div tag
-					return '<div class="story-image'
-						. ( $href ? '-gallery' : '' )
+					return '<div class="'
+						. ( $href ? 'story-gallery-image' : 'story-image' )
 						. '"' 
 						. ' style="background-image: url(\'' . esc_url( $src[0] ) . '\');"'
 						. ( $href ? ' data-href="' . esc_url( $href[1] ) . '"' : '' )
