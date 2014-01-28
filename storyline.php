@@ -209,10 +209,9 @@ class SMRT_Storyline {
 			return array();
 		}
 		$content = preg_replace( '/<span id=\"more-.*\"><\/span>/uim', "<!--more-->", $content );
-		$content = preg_replace( '/<!--more-->\\s*<\/p>/uim', '</p><!--more-->', $content);
-		$content = preg_replace( '/<p>\\s*(&nbsp;)?\\s*<\/p>/uim', "", $content); // clean up empty paragraphs
+		$content = preg_replace( '/<!--more-->\\s*<\/p>/uim', '</p><!--more-->', $content );
+		$content = preg_replace( '/<p>\\s*(&nbsp;)?\\s*<\/p>/uim', "", $content ); // clean up empty paragraphs
 		$slides = explode( "<!--more-->", $content );
-		$slides = array($content);
 		return $slides;
 	}
 	
