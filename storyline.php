@@ -517,8 +517,19 @@ class SMRT_Storyline {
 	public function smrt_topics_callback() {
 		$topics = get_terms( 'smrt-topic', array( 'orderby' => 'count', 'order' => 'DESC', 'number' => 6 ) );
 		
-		header( 'Content-Type: application/javascript', true );
-		echo esc_attr( $_GET[ 'topics' ] ) . '(' . json_encode( $topics ) . ')';
+		if ( isset( $_GET[ 'jsonp' ] ) ) {
+			$callback = $_GET[ 'jsonp' ];
+		} elseif ( isset( $_GET[ 'topics' ] ) ) {
+			$callback = $_GET[ 'topics' ];
+		}
+		
+		if ( empty( $callback ) ) {
+			header( 'Content-Type: application/json', true );
+			echo json_encode( $topics );
+		} else {
+			header( 'Content-Type: application/javascript', true );
+			echo esc_attr( $callback ) . '(' . json_encode( $topics ) . ')';
+		}
 		wp_die();
 	}
 	
