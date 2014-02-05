@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.3.0
+Version: 0.3.1
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.3.0' );
+define( 'SMRT_STORYLINE_VERSION', '0.3.1' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -71,6 +71,7 @@ class SMRT_Storyline {
 		
 		// register ajax handler for urban airship update
 		add_action( 'wp_ajax_smrt_push_ua_update', array ( $this, 'smrt_push_ua_update_callback' ) );
+		add_action( 'wp_ajax_smrt_alert_check_update', array ( $this, 'smrt_alert_check_update_callback' ) );
 		
 		// support for query and sort by edition
 		add_filter( 'query_vars', array( $this, 'add_edition_query_var' ) );
@@ -121,6 +122,8 @@ class SMRT_Storyline {
 		
 		$item['content'] = $this->split_content( apply_filters( 'the_content', get_the_content() ) );
 		$item['last_modified'] = get_the_modified_time( json_feed_date_format() );
+		
+		$item['updated'] = (bool) get_post_meta( $id, '_smrt_update_alert_sent' , true );
 		
 		// include custom sort parameter
 		static $edition;
@@ -707,9 +710,13 @@ class SMRT_Storyline {
 	 * @since 0.2.8
 	 */
 	function update_alert_meta_box(){
+		global $post;
+		$updated = (bool) get_post_meta( $post->ID, '_smrt_update_alert_sent' , true );
 		?>
 			<p id="update-status"></p>
 			<input name="submit_update" type="submit" value="Push Update" onClick="smrt_storyline_alerts_send_update(event);"/>
+			<br />
+			<input id="check-update" type="checkbox" <?php checked( $updated ) ?> onChange="smrt_storyline_alerts_check_update(event);" /> Updated
 		<?php
 	}
 	
@@ -732,7 +739,7 @@ class SMRT_Storyline {
 		$result = '';
 		
 		if ( isset( $_POST['nonce'] ) ) {
-			if ( wp_verify_none( $_POST['nonce'], 'smrt_storyline_ajax_nonce' ) )
+			if ( wp_verify_nonce( $_POST['nonce'], 'smrt_storyline_ajax_nonce' ) )
 				$nonce = wp_create_nonce( 'smrt_storyline_ajax_nonce' );
 		}
 		
@@ -775,11 +782,40 @@ class SMRT_Storyline {
 					$error_message = $response->get_error_message();
 				 	$result = 'Error: ' . $error_message;
 				} else {
+					update_post_meta( $postID, '_smrt_update_alert_sent', true );
 					$result = $response['response']['code'];
 				}
 			}
 			else {
 				$result = 'No post ID found';
+			}
+		}
+		$response = array( 'nonce' => $nonce, 'result' => $result );
+		echo json_encode( $response );
+		wp_die();
+	}
+	function smrt_alert_check_update_callback() {
+		// check nonce
+		$nonce = 0;
+		$result = '';
+		
+		if ( isset( $_POST['nonce'] ) ) {
+			if ( wp_verify_nonce( $_POST['nonce'], 'smrt_storyline_ajax_nonce' ) )
+				$nonce = wp_create_nonce( 'smrt_storyline_ajax_nonce' );
+		}
+		
+		if ( current_user_can( 'publish_posts' ) && $nonce ) {
+			$postID = intval( urldecode( $_POST['postID'] ) );
+			if ( $postID ) {
+				// current setting
+				$updated = (bool) get_post_meta( $postID, '_smrt_update_alert_sent' , true );
+				$updated = ! $updated; // invert for the toggle
+				
+				update_post_meta( $postID, '_smrt_update_alert_sent', $updated );
+				$result = ( $updated ) ? 'true' : 'false';
+			}
+			else {
+				$result = 'false - no post ID'; // this will output on console if we failed
 			}
 		}
 		$response = array( 'nonce' => $nonce, 'result' => $result );
