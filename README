@@ -1,7 +1,7 @@
 === storyline ===
 Contributors: Edward de Groot, Donnie Marges, Waheed Ashraf, Keith Benedict, Goldwin Guenther
 Tested up to: 3.8
-Stable tag: 0.2.9
+Stable tag: 0.3.0
 License: MIT
 License URI: https://github.com/Postmedia/storyline/blob/master/LICENSE
 
@@ -14,6 +14,12 @@ Supports mobile story elements
 Activate the plugin, Access the storyline menu off the main dashboard.
 
 == Changelog ==
+
+= 0.3.0 =
+* Removed nopaging
+* Added verification on $callback parameter as safe word
+* Added transient cache on smrt_topics_callback
+* Includes change to make callback parameter on smrt_topics_callback optional
 
 = 0.2.9 =
 * Changed sanitize to escape function in smrt_topics_callback
