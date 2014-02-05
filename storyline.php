@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.2.9
+Version: 0.3.0
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.2.9' );
+define( 'SMRT_STORYLINE_VERSION', '0.3.0' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -469,7 +469,7 @@ class SMRT_Storyline {
 		}
 		
 		// modify the original query to filter for a single day
-		$query->set( 'nopaging', true );
+		$query->set( 'posts_per_page', 100 ); 
 		$query->set( 'year' , $edition->format( 'Y' ) );
 		$query->set( 'monthnum' , $edition->format( 'm' ) );
 		$query->set( 'day' , $edition->format( 'd' ) );
@@ -515,7 +515,13 @@ class SMRT_Storyline {
 	 * @uses sanitize_text_field
 	 */
 	public function smrt_topics_callback() {
-		$topics = get_terms( 'smrt-topic', array( 'orderby' => 'count', 'order' => 'DESC', 'number' => 6 ) );
+	
+		if ( false === ( $topics = get_transient( 'smrt_topics_callback_results' ) ) ) {
+			$topics = get_terms( 'smrt-topic', array( 'orderby' => 'count', 'order' => 'DESC', 'number' => 6 ) );
+			
+			// cache for 5 mins
+			set_transient( 'smrt_topics_callback_results', $topics, 300 );
+		}
 		
 		if ( isset( $_GET[ 'jsonp' ] ) ) {
 			$callback = $_GET[ 'jsonp' ];
@@ -527,8 +533,15 @@ class SMRT_Storyline {
 			header( 'Content-Type: application/json', true );
 			echo json_encode( $topics );
 		} else {
-			header( 'Content-Type: application/javascript', true );
-			echo esc_attr( $callback ) . '(' . json_encode( $topics ) . ')';
+			if ( preg_match( '/[^\\.a-zA-Z0-9]/um', $callback ) ) {
+				// if $callback contains a non-word character, other than a dot
+				// this could be an XSS attack.
+				header('HTTP/1.1 400 Bad Request');
+			}
+			else {
+				header( 'Content-Type: application/javascript', true );
+				echo esc_attr( $callback ) . '(' . json_encode( $topics ) . ')';
+			}
 		}
 		wp_die();
 	}
