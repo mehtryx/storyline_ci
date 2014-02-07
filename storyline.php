@@ -124,6 +124,7 @@ class SMRT_Storyline {
 		$item['last_modified'] = get_the_modified_time( json_feed_date_format() );
 		
 		$item['updated'] = (bool) get_post_meta( $id, '_smrt_update_alert_sent' , true );
+		$item['no_thumbnail'] = (bool) get_post_meta( $id, 'no_thumbnail' , true );
 		
 		// include custom sort parameter
 		static $edition;
@@ -214,8 +215,8 @@ class SMRT_Storyline {
 		}
 		$content = preg_replace( '/<span id=\"more-.*\"><\/span>/uim', "<!--more-->", $content );
 		$content = preg_replace( '/<!--more-->\\s*<\/p>/uim', '</p><!--more-->', $content );
-		$content = preg_replace( '/<p>\\s*(&nbsp;)?\\s*<\/p>/uim', "", $content ); // clean up empty paragraphs
 		$slides = explode( "<!--more-->", $content );
+		$slides = preg_replace( '/^\\s*<p>\\s*(&nbsp;)?\\s*<\/p>\\s*/ui', "", $slides ); // clean up leading empty paragraphs
 		return $slides;
 	}
 	
@@ -235,7 +236,7 @@ class SMRT_Storyline {
 			'menu_position' => 5,
 			'has_archive' => true,
 			'rewrite' => array( 'slug' => 'storyline' ),
-			'supports' => array( 'title', 'editor', 'thumbnail', 'excerpt','post-formats', 'page-attributes' ),
+			'supports' => array( 'title', 'editor', 'thumbnail', 'excerpt','post-formats', 'page-attributes', 'custom-fields' ),
 			'taxonomies' => array( 'category' )
 		) );
 		
