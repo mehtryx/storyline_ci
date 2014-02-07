@@ -214,8 +214,8 @@ class SMRT_Storyline {
 		}
 		$content = preg_replace( '/<span id=\"more-.*\"><\/span>/uim', "<!--more-->", $content );
 		$content = preg_replace( '/<!--more-->\\s*<\/p>/uim', '</p><!--more-->', $content );
-		$content = preg_replace( '/<p>\\s*(&nbsp;)?\\s*<\/p>/uim', "", $content ); // clean up empty paragraphs
 		$slides = explode( "<!--more-->", $content );
+		$slides = preg_replace( '/^\\s*<p>\\s*(&nbsp;)?\\s*<\/p>\\s*/ui', "", $slides ); // clean up leading empty paragraphs
 		return $slides;
 	}
 	
