@@ -74,7 +74,11 @@ class SMRT_Storyline {
 		add_action( 'wp_ajax_smrt_alert_check_update', array ( $this, 'smrt_alert_check_update_callback' ) );
 		
 		// custom sorting by date and menu_order
-		add_action( 'pre_get_posts', array( $this, 'pre_get_storylines' ) );
+		add_action( 'pre_get_posts', array( $this, 'pre_get_storylines_sort' ) );
+		
+		// allow query of multiple posts by id
+		add_filter( 'query_vars', array( $this, 'add_following_query_var' ) );
+		add_action( 'pre_get_posts', array( $this, 'pre_get_following' ) );
 		
 		// adds order (menu order) to dashboard
 		if ( is_admin() ) {
@@ -197,7 +201,7 @@ class SMRT_Storyline {
 		}
 		return $date_sort;
 	}
-	
+		
 	/**
 	 * Returns the specified featured thumbnail size image url
 	 *
@@ -430,12 +434,37 @@ class SMRT_Storyline {
 		return $content;
 	}
 	
+ 	/**
+ 	 * Registers support for a custom query var named following
+ 	 *
+ 	 * @since 0.3.3
+ 	 */
+ 	public function add_following_query_var( $qvars ) {
+ 		$qvars[] = 'following';
+ 		return $qvars;
+ 	}
+	
+	/**
+	 * support querying by multple post ids
+	 *
+	 * @since 0.3.3
+	 */
+	public function pre_get_following( $query ) {
+		dbgx_trace_var( $query, '$following_query' );
+		if ( isset( $query->query['following'] ) ) {
+			$following = explode( ',', $query->query['following'] );
+			$query->set( 'post__in', $following );
+			$query->set( 'ignore_sticky_posts', true);
+		}
+	}
+	
+	
 	/**
 	 * automatically implement secondary sort by menu_order
 	 *
 	 * @since 0.3.2
 	 */
-	public function pre_get_storylines( $query ) {
+	public function pre_get_storylines_sort( $query ) {
 		
 		// only apply to storylines
 		if ( isset( $query->query_vars['post_type'] ) && 'storyline' !== $query->query_vars['post_type'] )
