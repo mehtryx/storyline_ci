@@ -73,11 +73,7 @@ class SMRT_Storyline {
 		add_action( 'wp_ajax_smrt_push_ua_update', array ( $this, 'smrt_push_ua_update_callback' ) );
 		add_action( 'wp_ajax_smrt_alert_check_update', array ( $this, 'smrt_alert_check_update_callback' ) );
 		
-		// support for query and sort by edition
-		add_filter( 'query_vars', array( $this, 'add_edition_query_var' ) );
-		add_action( 'pre_get_posts', array( $this, 'query_by_edition' ) );
-		add_filter( 'the_posts', array( $this, 'resort_edition_posts' ), 10, 2 );
-		
+		// custom sorting by date and menu_order
 		add_action( 'pre_get_posts', array( $this, 'pre_get_storylines' ) );
 		
 		// adds order (menu order) to dashboard
@@ -183,6 +179,13 @@ class SMRT_Storyline {
 		return $item;
 	}
 	
+	/**
+	 * calculates a sorted date field for JSON based on pub date and menu_order
+	 *
+	 * @since 0.3.2
+	 *
+	 * @uses get_post()
+	 */
 	function calc_date_sort( $post_id ) {
 		$post = get_post( $post_id );
 		$date_sort = new DateTime( $post->post_date );
@@ -428,16 +431,6 @@ class SMRT_Storyline {
 	}
 	
 	/**
-	 * Registers support for a custom query var named edition
-	 *
-	 * @since 0.2.9
-	 */
-	public function add_edition_query_var( $qvars ) {
-		$qvars[] = 'edition';
-		return $qvars;
-	}
-	
-	/**
 	 * automatically implement secondary sort by menu_order
 	 *
 	 * @since 0.3.2
@@ -487,87 +480,6 @@ class SMRT_Storyline {
 		global $wpdb;
 		remove_filter( 'posts_orderby', array( $this, 'storyline_order_desc' ) );
 		return "CAST($wpdb->posts.post_date as date) DESC, $wpdb->posts.menu_order = 0 ASC, $wpdb->posts.menu_order ASC";
-	}
-	
-	/**
-	 * implements the edition query when present
-	 *
-	 * @since 0.2.9
-	 *
-	 * @uses get_posts()
-	 */
-	public function query_by_edition( $query ) {
-		
-		// don't apply to admin pages
-		if ( is_admin() )
-			 return;
-		
-		// only apply when edition var is set
-		$edition_var = $query->get( 'edition' );
-		if ( empty( $edition_var ) )
-			return;
-		
-		// use the edition date as a starting point, looking for the next post date
-		$edition = new DateTime( $edition_var );
-		$edition->setTime( 0 , 0 , 0 );
-			
-		// since post dates include time, we need to look for items before the day after
-		$before = clone $edition;
-		$before->add( new DateInterval( 'P1D' ) );
-		
-		$args = $query->query;
-		$args['posts_per_page'] = 1;
-		$args['date_query'] = array( array(
-			'before' => $before->format( 'Y-m-d' )
-		) ) ;
-		
-		// remove edition to prevent recursive requests
-		unset( $args['edition'] );
-		
-		// if a post was returned, use it's date as the edition date
-		$latest = get_posts( $args );
-		if ( !empty( $latest ) ) {
-			$edition = new DateTime( $latest[0]->post_date );
-			$edition->setTime( 0, 0, 0 );
-			$query->query['edition'] = $edition->format( 'Y-m-d' );
-			$query->set( 'edition', $edition->format( 'Y-m-d' ) );
-		}
-		
-		// modify the original query to filter for a single day
-		$query->set( 'posts_per_page', 100 ); 
-		$query->set( 'year' , $edition->format( 'Y' ) );
-		$query->set( 'monthnum' , $edition->format( 'm' ) );
-		$query->set( 'day' , $edition->format( 'd' ) );
-	}
-	
-	/**
-	 * Resorts the posts when querying by edition
-	 *
-	 * @since 0.2.9
-	 */
-	public function resort_edition_posts( $posts, $query ) {
-		$edition_var = $query->get( 'edition' );
-		if ( empty( $edition_var ) ) return $posts;
-		
-		// sort returned posts by menu order first and then by date (desc)
-		// items with no menu_order specified (zero) are pushed to the end
-		usort( $posts, function( $a, $b ) {
-			if( $a->menu_order === $b->menu_order ) {
-				$date_a = new DateTime( $a->post_date );
-				$date_b = new DateTime( $b->post_date );
-				if ( $date_a == $date_b ) {
-					return 0;
-				} else {
-					return $date_a > $date_b ? -1 : 1;
-				}
-			} else {
-				$order_a = empty( $a->menu_order ) ? 9999 : $a->menu_order;
-				$order_b = empty( $b->menu_order ) ? 9999 : $b->menu_order;
-				return $order_a < $order_b ? -1 : 1;
-			}
-		});
-		
-		return $posts;
 	}
 	
 	/**
