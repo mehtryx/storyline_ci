@@ -80,9 +80,9 @@ class SMRT_Storyline {
 		
 		add_action( 'pre_get_posts', array( $this, 'pre_get_storylines' ) );
 		
-		// adds priority (menu order) to dashboard
+		// adds order (menu order) to dashboard
 		if ( is_admin() ) {
-			add_filter( 'manage_storyline_posts_columns', array( $this, 'add_priority_column') );
+			add_filter( 'manage_storyline_posts_columns', array( $this, 'add_order_column') );
 			add_action( 'manage_storyline_posts_custom_column' , array( $this, 'custom_columns' ), 10, 2 );
 		}
 		
@@ -437,7 +437,7 @@ class SMRT_Storyline {
 	}
 	
 	/**
-	 * automatically implement secondary sort by menu_order (priority)
+	 * automatically implement secondary sort by menu_order
 	 *
 	 * @since 0.3.2
 	 */
@@ -459,18 +459,33 @@ class SMRT_Storyline {
 	}
 	
 	/**
-	 * sort by 
+	 * sort by date (without time) ASC and menu order DESC
+	 * note: we need to remove the time via a cast, otherwise
+	 *       the menu_order is negligible unless they all have the exact same time
 	 *
 	 * @since 0.3.2
+	 *
+	 * @uses remove_filter()
 	 */
 	public function storyline_order_asc( $orderby ) {
+		global $wpdb;
 		remove_filter( 'posts_orderby', array( $this, 'storyline_order_asc' ) );
-		return 'CAST(post_date as date) ASC, -menu_order DESC';
+		return "CAST($wpdb->posts.post_date as date) ASC, $wpdb->posts.menu_order = 0 DESC, $wpdb->posts.menu_order DESC";
 	}
 	
+	/**
+	 * sort by date (without time) DESC and menu order ASC
+	 * note: we need to remove the time via a cast, otherwise
+	 *       the menu_order is negligible unless they all have the exact same time
+	 *
+	 * @since 0.3.2
+	 *
+	 * @uses remove_filter()
+	 */
 	public function storyline_order_desc( $orderby ) {
+		global $wpdb;
 		remove_filter( 'posts_orderby', array( $this, 'storyline_order_desc' ) );
-		return 'CAST(post_date as date) DESC, -menu_order ASC';
+		return "CAST($wpdb->posts.post_date as date) DESC, $wpdb->posts.menu_order = 0 ASC, $wpdb->posts.menu_order ASC";
 	}
 	
 	/**
@@ -555,16 +570,16 @@ class SMRT_Storyline {
 	}
 	
 	/**
-	 * Adds a new Priority column on storyline posts dashboard page
+	 * Adds a new order column on storyline posts dashboard page
 	 *
 	 * @since 0.3.2
 	 */
-	public function add_priority_column( $columns ) {
-		return array_merge( $columns, array( 'menu_order' => __( 'Priority' ) ) );
+	public function add_order_column( $columns ) {
+		return array_merge( $columns, array( 'menu_order' => __( 'Order' ) ) );
 	}
 	
 	/**
-	 * Adds value for Priority column on storyline posts dashboard page
+	 * Adds value for order column on storyline posts dashboard page
 	 *
 	 * @since 0.3.2
 	 *
