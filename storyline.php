@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.3.1
+Version: 0.3.2
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.3.1' );
+define( 'SMRT_STORYLINE_VERSION', '0.3.2' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -77,6 +77,12 @@ class SMRT_Storyline {
 		add_filter( 'query_vars', array( $this, 'add_edition_query_var' ) );
 		add_action( 'pre_get_posts', array( $this, 'query_by_edition' ) );
 		add_filter( 'the_posts', array( $this, 'resort_edition_posts' ), 10, 2 );
+		
+		// adds priority (menu order) to dashboard
+		if ( is_admin() ) {
+			add_filter( 'manage_storyline_posts_columns', array( $this, 'add_priority_column') );
+			add_action( 'manage_storyline_posts_custom_column' , array( $this, 'custom_columns' ), 10, 2 );
+		}
 		
 		// Add admin hooks for urban airship settings
 		if ( is_admin() ) {
@@ -508,6 +514,27 @@ class SMRT_Storyline {
 		
 		return $posts;
 	}
+	
+	/**
+	 * Adds a new Priority column on storyline posts dashboard page
+	 *
+	 * @since 0.3.2
+	 */
+	public function add_priority_column( $columns ) {
+		return array_merge( $columns, array( 'menu_order' => __( 'Priority' ) ) );
+	}
+	
+	/**
+	 * Adds value for Priority column on storyline posts dashboard page
+	 *
+	 * @since 0.3.2
+	 */
+	public function custom_columns( $column, $post_id ) {
+		if ( 'menu_order' === $column ) {
+			$post = get_post( $post_id );
+			echo $post->menu_order;
+		}
+	}	
 	
 	/**
 	 * AJAX hook to return list of topics as JSON
