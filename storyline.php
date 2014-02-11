@@ -135,18 +135,7 @@ class SMRT_Storyline {
 		$item['no_thumbnail'] = (bool) get_post_meta( $id, 'no_thumbnail' , true );
 		
 		// include custom sort parameter
-		static $edition;
-		if ( empty( $edition ) && isset( $query_args['edition'] ) ) {
-			$edition = new DateTime( $query_args['edition'] );
-			$edition->setTime( 23 , 59 , 59);
-		}
-		
-		if ( empty( $edition ) ) {
-			$item['date_sort'] = $item['date'];
-		} else {
-			$item['date_sort'] = $edition->format( json_feed_date_format() );
-			$edition->sub( new DateInterval( 'PT1M' ) );
-		}
+		$item['date_sort'] = $this->calc_date_sort( $id )->format( json_feed_date_format() );
 		
 		// include post format
 		$format = get_post_format();
@@ -192,6 +181,18 @@ class SMRT_Storyline {
 			}
 		}
 		return $item;
+	}
+	
+	function calc_date_sort( $post_id ) {
+		$post = get_post( $post_id );
+		$date_sort = new DateTime( $post->post_date );
+		if ( $post->menu_order ) {
+			$date_sort->setTime( 23 , 59 , 59);
+			$date_sort->sub( new DateInterval( 'PT'. $post->menu_order . 'M' ) );
+		} else {
+			$date_sort->setTime( 0 , 0 , 0);
+		}
+		return $date_sort;
 	}
 	
 	/**
