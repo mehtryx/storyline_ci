@@ -78,6 +78,8 @@ class SMRT_Storyline {
 		add_action( 'pre_get_posts', array( $this, 'query_by_edition' ) );
 		add_filter( 'the_posts', array( $this, 'resort_edition_posts' ), 10, 2 );
 		
+		add_action( 'pre_get_posts', array( $this, 'pre_get_storylines' ) );
+		
 		// adds priority (menu order) to dashboard
 		if ( is_admin() ) {
 			add_filter( 'manage_storyline_posts_columns', array( $this, 'add_priority_column') );
@@ -435,6 +437,43 @@ class SMRT_Storyline {
 	}
 	
 	/**
+	 * automatically implement secondary sort by menu_order (priority)
+	 *
+	 * @since 0.3.2
+	 */
+	public function pre_get_storylines( $query ) {
+		
+		// only apply to storylines
+		if ( isset( $query->query_vars['post_type'] ) && 'storyline' !== $query->query_vars['post_type'] )
+			return; 
+		
+		// only apply when sorting by date
+		if ( isset( $query->query_vars['orderby'] ) && 'date' !== $query->query_vars['orderby'] )
+			return;
+		
+		// register the filter based on direction
+		if ( isset( $query->query_vars['order'] ) && 'asc' === $query->query_vars['order'] )
+			add_filter( 'posts_orderby', array( $this, 'storyline_order_asc' ) );
+		else
+			add_filter( 'posts_orderby', array( $this, 'storyline_order_desc' ) );
+	}
+	
+	/**
+	 * sort by 
+	 *
+	 * @since 0.3.2
+	 */
+	public function storyline_order_asc( $orderby ) {
+		remove_filter( 'posts_orderby', array( $this, 'storyline_order_asc' ) );
+		return 'CAST(post_date as date) ASC, -menu_order DESC';
+	}
+	
+	public function storyline_order_desc( $orderby ) {
+		remove_filter( 'posts_orderby', array( $this, 'storyline_order_desc' ) );
+		return 'CAST(post_date as date) DESC, -menu_order ASC';
+	}
+	
+	/**
 	 * implements the edition query when present
 	 *
 	 * @since 0.2.9
@@ -528,6 +567,8 @@ class SMRT_Storyline {
 	 * Adds value for Priority column on storyline posts dashboard page
 	 *
 	 * @since 0.3.2
+	 *
+	 * @uses get_post()
 	 */
 	public function custom_columns( $column, $post_id ) {
 		if ( 'menu_order' === $column ) {
