@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.3.1
+Version: 0.3.2
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.3.1' );
+define( 'SMRT_STORYLINE_VERSION', '0.3.2' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -73,10 +73,14 @@ class SMRT_Storyline {
 		add_action( 'wp_ajax_smrt_push_ua_update', array ( $this, 'smrt_push_ua_update_callback' ) );
 		add_action( 'wp_ajax_smrt_alert_check_update', array ( $this, 'smrt_alert_check_update_callback' ) );
 		
-		// support for query and sort by edition
-		add_filter( 'query_vars', array( $this, 'add_edition_query_var' ) );
-		add_action( 'pre_get_posts', array( $this, 'query_by_edition' ) );
-		add_filter( 'the_posts', array( $this, 'resort_edition_posts' ), 10, 2 );
+		// custom sorting by date and menu_order
+		add_action( 'pre_get_posts', array( $this, 'pre_get_storylines' ) );
+		
+		// adds order (menu order) to dashboard
+		if ( is_admin() ) {
+			add_filter( 'manage_storyline_posts_columns', array( $this, 'add_order_column') );
+			add_action( 'manage_storyline_posts_custom_column' , array( $this, 'custom_columns' ), 10, 2 );
+		}
 		
 		// Add admin hooks for urban airship settings
 		if ( is_admin() ) {
@@ -127,18 +131,7 @@ class SMRT_Storyline {
 		$item['no_thumbnail'] = (bool) get_post_meta( $id, 'no_thumbnail' , true );
 		
 		// include custom sort parameter
-		static $edition;
-		if ( empty( $edition ) && isset( $query_args['edition'] ) ) {
-			$edition = new DateTime( $query_args['edition'] );
-			$edition->setTime( 23 , 59 , 59);
-		}
-		
-		if ( empty( $edition ) ) {
-			$item['date_sort'] = $item['date'];
-		} else {
-			$item['date_sort'] = $edition->format( json_feed_date_format() );
-			$edition->sub( new DateInterval( 'PT1M' ) );
-		}
+		$item['date_sort'] = $this->calc_date_sort( $id )->format( json_feed_date_format() );
 		
 		// include post format
 		$format = get_post_format();
@@ -184,6 +177,25 @@ class SMRT_Storyline {
 			}
 		}
 		return $item;
+	}
+	
+	/**
+	 * calculates a sorted date field for JSON based on pub date and menu_order
+	 *
+	 * @since 0.3.2
+	 *
+	 * @uses get_post()
+	 */
+	function calc_date_sort( $post_id ) {
+		$post = get_post( $post_id );
+		$date_sort = new DateTime( $post->post_date );
+		if ( $post->menu_order ) {
+			$date_sort->setTime( 23 , 59 , 59);
+			$date_sort->sub( new DateInterval( 'PT'. $post->menu_order . 'M' ) );
+		} else {
+			$date_sort->setTime( 0 , 0 , 0);
+		}
+		return $date_sort;
 	}
 	
 	/**
@@ -419,95 +431,79 @@ class SMRT_Storyline {
 	}
 	
 	/**
-	 * Registers support for a custom query var named edition
+	 * automatically implement secondary sort by menu_order
 	 *
-	 * @since 0.2.9
+	 * @since 0.3.2
 	 */
-	public function add_edition_query_var( $qvars ) {
-		$qvars[] = 'edition';
-		return $qvars;
-	}
-	
-	/**
-	 * implements the edition query when present
-	 *
-	 * @since 0.2.9
-	 *
-	 * @uses get_posts()
-	 */
-	public function query_by_edition( $query ) {
+	public function pre_get_storylines( $query ) {
 		
-		// don't apply to admin pages
-		if ( is_admin() )
-			 return;
+		// only apply to storylines
+		if ( isset( $query->query_vars['post_type'] ) && 'storyline' !== $query->query_vars['post_type'] )
+			return; 
 		
-		// only apply when edition var is set
-		$edition_var = $query->get( 'edition' );
-		if ( empty( $edition_var ) )
+		// only apply when sorting by date
+		if ( isset( $query->query_vars['orderby'] ) && 'date' !== $query->query_vars['orderby'] )
 			return;
 		
-		// use the edition date as a starting point, looking for the next post date
-		$edition = new DateTime( $edition_var );
-		$edition->setTime( 0 , 0 , 0 );
-			
-		// since post dates include time, we need to look for items before the day after
-		$before = clone $edition;
-		$before->add( new DateInterval( 'P1D' ) );
-		
-		$args = $query->query;
-		$args['posts_per_page'] = 1;
-		$args['date_query'] = array( array(
-			'before' => $before->format( 'Y-m-d' )
-		) ) ;
-		
-		// remove edition to prevent recursive requests
-		unset( $args['edition'] );
-		
-		// if a post was returned, use it's date as the edition date
-		$latest = get_posts( $args );
-		if ( !empty( $latest ) ) {
-			$edition = new DateTime( $latest[0]->post_date );
-			$edition->setTime( 0, 0, 0 );
-			$query->query['edition'] = $edition->format( 'Y-m-d' );
-			$query->set( 'edition', $edition->format( 'Y-m-d' ) );
-		}
-		
-		// modify the original query to filter for a single day
-		$query->set( 'posts_per_page', 100 ); 
-		$query->set( 'year' , $edition->format( 'Y' ) );
-		$query->set( 'monthnum' , $edition->format( 'm' ) );
-		$query->set( 'day' , $edition->format( 'd' ) );
+		// register the filter based on direction
+		if ( isset( $query->query_vars['order'] ) && 'asc' === $query->query_vars['order'] )
+			add_filter( 'posts_orderby', array( $this, 'storyline_order_asc' ) );
+		else
+			add_filter( 'posts_orderby', array( $this, 'storyline_order_desc' ) );
 	}
 	
 	/**
-	 * Resorts the posts when querying by edition
+	 * sort by date (without time) ASC and menu order DESC
+	 * note: we need to remove the time via a cast, otherwise
+	 *       the menu_order is negligible unless they all have the exact same time
 	 *
-	 * @since 0.2.9
+	 * @since 0.3.2
+	 *
+	 * @uses remove_filter()
 	 */
-	public function resort_edition_posts( $posts, $query ) {
-		$edition_var = $query->get( 'edition' );
-		if ( empty( $edition_var ) ) return $posts;
-		
-		// sort returned posts by menu order first and then by date (desc)
-		// items with no menu_order specified (zero) are pushed to the end
-		usort( $posts, function( $a, $b ) {
-			if( $a->menu_order === $b->menu_order ) {
-				$date_a = new DateTime( $a->post_date );
-				$date_b = new DateTime( $b->post_date );
-				if ( $date_a == $date_b ) {
-					return 0;
-				} else {
-					return $date_a > $date_b ? -1 : 1;
-				}
-			} else {
-				$order_a = empty( $a->menu_order ) ? 9999 : $a->menu_order;
-				$order_b = empty( $b->menu_order ) ? 9999 : $b->menu_order;
-				return $order_a < $order_b ? -1 : 1;
-			}
-		});
-		
-		return $posts;
+	public function storyline_order_asc( $orderby ) {
+		global $wpdb;
+		remove_filter( 'posts_orderby', array( $this, 'storyline_order_asc' ) );
+		return "CAST($wpdb->posts.post_date as date) ASC, $wpdb->posts.menu_order = 0 DESC, $wpdb->posts.menu_order DESC";
 	}
+	
+	/**
+	 * sort by date (without time) DESC and menu order ASC
+	 * note: we need to remove the time via a cast, otherwise
+	 *       the menu_order is negligible unless they all have the exact same time
+	 *
+	 * @since 0.3.2
+	 *
+	 * @uses remove_filter()
+	 */
+	public function storyline_order_desc( $orderby ) {
+		global $wpdb;
+		remove_filter( 'posts_orderby', array( $this, 'storyline_order_desc' ) );
+		return "CAST($wpdb->posts.post_date as date) DESC, $wpdb->posts.menu_order = 0 ASC, $wpdb->posts.menu_order ASC";
+	}
+	
+	/**
+	 * Adds a new order column on storyline posts dashboard page
+	 *
+	 * @since 0.3.2
+	 */
+	public function add_order_column( $columns ) {
+		return array_merge( $columns, array( 'menu_order' => __( 'Order' ) ) );
+	}
+	
+	/**
+	 * Adds value for order column on storyline posts dashboard page
+	 *
+	 * @since 0.3.2
+	 *
+	 * @uses get_post()
+	 */
+	public function custom_columns( $column, $post_id ) {
+		if ( 'menu_order' === $column ) {
+			$post = get_post( $post_id );
+			echo $post->menu_order;
+		}
+	}	
 	
 	/**
 	 * AJAX hook to return list of topics as JSON
