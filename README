@@ -1,7 +1,7 @@
 === storyline ===
 Contributors: Edward de Groot, Donnie Marges, Waheed Ashraf, Keith Benedict, Goldwin Guenther
 Tested up to: 3.8
-Stable tag: 0.3.1
+Stable tag: 0.3.2
 License: MIT
 License URI: https://github.com/Postmedia/storyline/blob/master/LICENSE
 
@@ -14,6 +14,15 @@ Supports mobile story elements
 Activate the plugin, Access the storyline menu off the main dashboard.
 
 == Changelog ==
+
+= 0.3.2 =
+* Add menu order to storyline list dashboard
+* Order by date and menu_order (applied to admin screens and output)
+* Improved and hardened custom sort
+* Updated date_sort
+* Removed support for editions, now handled by custom orderby
+* Added ability to query multiple posts by ID
+* Allow for 100 following posts to be returned
 
 = 0.3.1 =
 * Added an updated checkmark under the metabox for pushing alerts
