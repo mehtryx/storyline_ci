@@ -450,14 +450,13 @@ class SMRT_Storyline {
 	 * @since 0.3.3
 	 */
 	public function pre_get_following( $query ) {
-		dbgx_trace_var( $query, '$following_query' );
 		if ( isset( $query->query['following'] ) ) {
 			$following = explode( ',', $query->query['following'] );
 			$query->set( 'post__in', $following );
 			$query->set( 'ignore_sticky_posts', true);
+			$query->set( 'posts_per_page', 100);
 		}
 	}
-	
 	
 	/**
 	 * automatically implement secondary sort by menu_order
