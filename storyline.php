@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.3.2
+Version: 0.3.3
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.3.2' );
+define( 'SMRT_STORYLINE_VERSION', '0.3.3' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -152,11 +152,15 @@ class SMRT_Storyline {
 		$position = $json_feed->current_post + $offset;
 		$item['position'] = $position;
 		
-		// include total number of posts and query vars on first post
+		// include total number of posts, query vars, and index ad code on first post
 		if ( 0 === $position ) {
 			$item['post_count'] = $json_feed->found_posts;
 			$item['query'] = $json_feed->query;
+			$item['main_ad_codes'] = $this->get_main_ad_codes();
 		}
+		
+		// specify ad codes
+		$item['ad_codes'] = $this->get_ad_codes( $id );
 		
 		// specify thumbnail and overwrite featured image url
 		$thumbnail_id = get_post_thumbnail_id();
@@ -180,6 +184,7 @@ class SMRT_Storyline {
 				);
 			}
 		}
+		
 		return $item;
 	}
 	
@@ -201,7 +206,59 @@ class SMRT_Storyline {
 		}
 		return $date_sort;
 	}
+	
+	/**
+	 * calculates ad codes for a given story
+	 *
+	 * @since 0.3.3
+	 *
+	 * @uses get_post()
+	 */
+	function get_ad_codes( $post_id ) {
+		$ad_codes = array(
+			'ad' => 'news/story',
+			'nk' => 'print',
+			'pr' => 'oc',
+			'page' => 'story',
+			'loc' => 'top'
+		);
 		
+		$cat = get_the_category( $post_id );
+		if ( !empty( $cat ) ) {
+			$ad_codes['ad'] = get_category_parents( $cat[0]->term_id, false, '/', true ) . 'story';
+		}
+		
+		$slugs = explode( '/', $ad_codes['ad'] );
+		$count = count( $slugs );
+		
+		$ad_codes['ck'] = $slugs[0];
+		if ( $count > 2 ) {
+			$ad_codes['sck'] = array_slice( $slugs, 1, $count - 2 );
+		}
+		$ad_codes['page'] = $slugs[$count - 1];
+
+		return $ad_codes;
+	}
+	
+	/**
+	 * calculates ad codes for a given feed
+	 *
+	 * @since 0.3.3
+	 */
+	function get_main_ad_codes() {
+		$ad_codes = array(
+			'ad' => 'index',
+			'nk' => 'print',
+			'pr' => 'oc',
+			'ck' => 'index',
+			'imp' => 'index',
+			'page' => 'index',
+			'loc' => 'top'
+		);
+		
+		return $ad_codes;
+	}
+	
 	/**
 	 * Returns the specified featured thumbnail size image url
 	 *
