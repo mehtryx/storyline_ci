@@ -134,9 +134,6 @@ class SMRT_Storyline {
 		$item['updated'] = (bool) get_post_meta( $id, '_smrt_update_alert_sent' , true );
 		$item['no_thumbnail'] = (bool) get_post_meta( $id, 'no_thumbnail' , true );
 		
-		// include custom sort parameter
-		$item['date_sort'] = $this->calc_date_sort( $id )->format( json_feed_date_format() );
-		
 		// include post format
 		$format = get_post_format();
 		if ( false !== $format )
@@ -151,6 +148,9 @@ class SMRT_Storyline {
 		}
 		$position = $json_feed->current_post + $offset;
 		$item['position'] = $position;
+		
+		// include custom sort parameter
+		$item['date_sort'] = $this->calc_date_sort( $id, $position )->format( json_feed_date_format() );
 		
 		// include total number of posts and query vars on first post
 		if ( 0 === $position ) {
@@ -190,15 +190,11 @@ class SMRT_Storyline {
 	 *
 	 * @uses get_post()
 	 */
-	function calc_date_sort( $post_id ) {
+	function calc_date_sort( $post_id, $position ) {
 		$post = get_post( $post_id );
 		$date_sort = new DateTime( $post->post_date );
-		if ( $post->menu_order ) {
-			$date_sort->setTime( 23 , 59 , 59);
-			$date_sort->sub( new DateInterval( 'PT'. $post->menu_order . 'M' ) );
-		} else {
-			$date_sort->setTime( 0 , 0 , 0);
-		}
+		$date_sort->setTime( 23 , 59 , 59);
+		$date_sort->sub( new DateInterval( 'PT'. $position . 'M' ) );
 		return $date_sort;
 	}
 		
