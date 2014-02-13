@@ -1,7 +1,7 @@
 === storyline ===
 Contributors: Edward de Groot, Donnie Marges, Waheed Ashraf, Keith Benedict, Goldwin Guenther
 Tested up to: 3.8
-Stable tag: 0.3.2
+Stable tag: 0.3.3
 License: MIT
 License URI: https://github.com/Postmedia/storyline/blob/master/LICENSE
 
@@ -14,6 +14,11 @@ Supports mobile story elements
 Activate the plugin, Access the storyline menu off the main dashboard.
 
 == Changelog ==
+
+= 0.3.3 =
+* Updated date_sort to ensure unique sort field and consistency in app
+* Moved ad code functionality to plugin from api
+* added support for zoninator
 
 = 0.3.2 =
 * Add menu order to storyline list dashboard

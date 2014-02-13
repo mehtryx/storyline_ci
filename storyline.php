@@ -305,7 +305,7 @@ class SMRT_Storyline {
 			'menu_position' => 5,
 			'has_archive' => true,
 			'rewrite' => array( 'slug' => 'storyline' ),
-			'supports' => array( 'title', 'editor', 'thumbnail', 'excerpt','post-formats', 'page-attributes', 'custom-fields' ),
+			'supports' => array( 'title', 'editor', 'thumbnail', 'excerpt','post-formats', 'page-attributes', 'custom-fields', 'zoninator_zones' ),
 			'taxonomies' => array( 'category' )
 		) );
 		
