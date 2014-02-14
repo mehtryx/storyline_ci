@@ -285,7 +285,9 @@ class SMRT_Storyline {
 		$content = preg_replace( '/<span id=\"more-.*\"><\/span>/uim', "<!--more-->", $content );
 		$content = preg_replace( '/<!--more-->\\s*<\/p>/uim', '</p><!--more-->', $content );
 		$slides = explode( "<!--more-->", $content );
-		$slides = preg_replace( '/^\\s*<p>\\s*(&nbsp;)?\\s*<\/p>\\s*/ui', "", $slides ); // clean up leading empty paragraphs
+		
+		// clean up leading empty paragraphs, leading end paragraphs, trailing open paragraphs, and spacing
+		$slides = preg_replace("/(^\\s*<p>\\s*&nbsp;\\s*<\/p>\\s*)|(^\\s*<\/p>\\s*)|(^\\s*)|(\\s*<p>\\s*$)|(\\s*$)/ui", "", $slides);
 		return $slides;
 	}
 	
