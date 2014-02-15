@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.3.3
+Version: 0.3.4
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.3.3' );
+define( 'SMRT_STORYLINE_VERSION', '0.3.4' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -156,7 +156,12 @@ class SMRT_Storyline {
 		if ( 0 === $position ) {
 			$item['post_count'] = $json_feed->found_posts;
 			$item['query'] = $json_feed->query;
-			$item['main_ad_codes'] = $this->get_main_ad_codes();
+			
+			$topic = null;
+			if ( isset( $query_args['smrt-topic'] ) ) {
+				$topic = $query_args['smrt-topic'];
+			}
+			$item['main_ad_codes'] = $this->get_main_ad_codes( $topic );
 		}
 		
 		// specify ad codes
@@ -205,24 +210,35 @@ class SMRT_Storyline {
 	}
 	
 	/**
-	 * calculates ad codes for a given story
+	 * generates ad codes for a given term or slug
 	 *
-	 * @since 0.3.3
+	 * @since 0.3.4
 	 *
-	 * @uses get_post()
+	 * @uses get_term_by()
+	 * @uses get_category_parents()
 	 */
-	function get_ad_codes( $post_id ) {
+	function generate_ad_codes( $term, $page ) {
+		
 		$ad_codes = array(
-			'ad' => 'news/story',
+			'ad' => 'news/' . $page,
 			'nk' => 'print',
 			'pr' => 'oc',
-			'page' => 'story',
+			'page' => $page,
 			'loc' => 'top'
 		);
+
+		if ( is_string( $term ) ) {
+			// remove numeric suffic from slug
+			$slug = preg_replace( "/-\\d+$/ui", "", $term );
+			$term = get_term_by( 'slug', $slug, 'category' );
+		}
 		
-		$cat = get_the_category( $post_id );
-		if ( !empty( $cat ) ) {
-			$ad_codes['ad'] = get_category_parents( $cat[0]->term_id, false, '/', true ) . 'story';
+		if ( empty( $term ) ){
+			if ( !empty( $slug ) ) {
+				$ad_codes['kw'] = $slug;
+			}
+		} else {
+			$ad_codes['ad'] = get_category_parents( $term->term_id, false, '/', true ) . $page;
 		}
 		
 		$slugs = explode( '/', $ad_codes['ad'] );
@@ -232,27 +248,33 @@ class SMRT_Storyline {
 		if ( $count > 2 ) {
 			$ad_codes['sck'] = array_slice( $slugs, 1, $count - 2 );
 		}
-		$ad_codes['page'] = $slugs[$count - 1];
 
 		return $ad_codes;
 	}
 	
 	/**
-	 * calculates ad codes for a given feed
+	 * generates ad codes for a given story
+	 *
+	 * @since 0.3.3
+	 *
+	 * @uses get_post()
+	 */
+	function get_ad_codes( $post_id ) {
+		$cat = get_the_category( $post_id );
+		if ( !empty( $cat ) ) {
+			$cat = $cat[0];
+		}
+		return $this->generate_ad_codes( $cat, 'story' );
+	}
+	
+	/**
+	 * generates ad codes for a given feed
 	 *
 	 * @since 0.3.3
 	 */
-	function get_main_ad_codes() {
-		$ad_codes = array(
-			'ad' => 'news/index',
-			'nk' => 'print',
-			'pr' => 'oc',
-			'ck' => 'news',
-			'imp' => 'news',
-			'page' => 'index',
-			'loc' => 'top'
-		);
-		
+	function get_main_ad_codes( $slug ) {
+		$ad_codes = $this->generate_ad_codes( $slug, 'index' );
+		$ad_codes['imp'] = $ad_codes['ck'];
 		return $ad_codes;
 	}
 	
