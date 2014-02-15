@@ -244,11 +244,11 @@ class SMRT_Storyline {
 	 */
 	function get_main_ad_codes() {
 		$ad_codes = array(
-			'ad' => 'index',
+			'ad' => 'news/index',
 			'nk' => 'print',
 			'pr' => 'oc',
-			'ck' => 'index',
-			'imp' => 'index',
+			'ck' => 'news',
+			'imp' => 'news',
 			'page' => 'index',
 			'loc' => 'top'
 		);
