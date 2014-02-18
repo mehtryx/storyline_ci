@@ -1,7 +1,7 @@
 === storyline ===
 Contributors: Edward de Groot, Donnie Marges, Waheed Ashraf, Keith Benedict, Goldwin Guenther
 Tested up to: 3.8
-Stable tag: 0.3.3
+Stable tag: 0.3.5
 License: MIT
 License URI: https://github.com/Postmedia/storyline/blob/master/LICENSE
 
@@ -14,6 +14,22 @@ Supports mobile story elements
 Activate the plugin, Access the storyline menu off the main dashboard.
 
 == Changelog ==
+
+= 0.3.5 =
+* Handles embedding of non-wordpress images
+* no longer breaks on no featured image
+* filters are now applied to each story element (slide) requires preview to be executed from theme with helper method smrt_storyline_with_preview()
+* Changed the alert notification message to include the story title
+* Added "extra" field on alert to include the postID in the "url" extra, this maps to same field were using on broadcasts
+ to simplify client check (intval of "url == int is a story in the app, otherwise URL to external post" )
+* removed support for zoninator
+
+= 0.3.4 =
+* content cleanup fix
+* VIP spacing fix
+* Added custom featured image credit field
+* target main view ad codes to news
+* main ad codes are now topical
 
 = 0.3.3 =
 * Updated date_sort to ensure unique sort field and consistency in app

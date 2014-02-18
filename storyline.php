@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.3.4
+Version: 0.3.5
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.3.4' );
+define( 'SMRT_STORYLINE_VERSION', '0.3.5' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -335,7 +335,7 @@ class SMRT_Storyline {
 			'menu_position' => 5,
 			'has_archive' => true,
 			'rewrite' => array( 'slug' => 'storyline' ),
-			'supports' => array( 'title', 'editor', 'thumbnail', 'excerpt','post-formats', 'page-attributes', 'custom-fields', 'zoninator_zones' ),
+			'supports' => array( 'title', 'editor', 'thumbnail', 'excerpt','post-formats', 'page-attributes', 'custom-fields' ),
 			'taxonomies' => array( 'category' )
 		) );
 		
@@ -858,14 +858,18 @@ class SMRT_Storyline {
 		
 		if ( current_user_can( 'publish_posts' ) && $nonce ) {
 			$postID = intval( urldecode( $_POST['postID'] ) );
-			if ( $postID ) {
+			$post_title  = ( $postID ? get_the_title( $postID ) : null );
+			
+			// we need both otherwise this alert wont't work
+			if ( $postID && $post_title ) { 	
 				$options = get_option( 'smrt_storyline_settings' );
 				$auth_combo = sanitize_text_field( $options['app_id'] ) . ':' . sanitize_text_field( $options['master_secret'] );
 				
 				// build push body as per v3 of Urban Airship push API 
 				// http://docs.urbanairship.com/reference/api/v3/push.html#push-object
 				$contents = array();
-				$contents['alert'] = 'Updated story';
+				$contents['alert'] = 'Updated story - ' . $post_title;
+				$contents['extra'] = array( 'url' => strval( $postID ) );
 				$notification = array();
 				$notification['ios'] = $contents;
 				$notification['android'] = $contents;
@@ -900,7 +904,7 @@ class SMRT_Storyline {
 				}
 			}
 			else {
-				$result = 'No post ID found';
+				$result = 'Invalid Post, no ID or Title found';
 			}
 		}
 		$response = array( 'nonce' => $nonce, 'result' => $result );
