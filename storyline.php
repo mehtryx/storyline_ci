@@ -59,9 +59,6 @@ class SMRT_Storyline {
 		add_action( 'after_setup_theme', array( $this, 'add_custom_image_sizes' ) );
 		add_action( 'init', array( $this, 'register_storyline' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_alerts_meta_box' ) );
-		// the intent in the priority '999' is to push this to the very last, this view is specialized to a simulated
-		// mobile preview, which needs to account for any and all changes by other plugins, themes.  999 seemed like a good number.
-		add_filter( 'the_content', array( $this, 'modified_post_view' ), 999 ); 
 		add_filter( 'the_content', array( $this, 'refactor_images' ), 99 ); 
 		add_filter( 'json_feed_item',  array( $this ,'json_feed_items_with_slides' ), 10, 4 );
 		
@@ -128,7 +125,7 @@ class SMRT_Storyline {
 		if ( 'storyline' !== $item['type'] )
 			return $item;
 		
-		$item['content'] = $this->split_content( apply_filters( 'the_content', get_the_content() ) );
+		$item['content'] = $this->split_content( get_the_content() );
 		$item['last_modified'] = get_the_modified_time( json_feed_date_format() );
 		
 		$item['updated'] = (bool) get_post_meta( $id, '_smrt_update_alert_sent' , true );
@@ -170,12 +167,16 @@ class SMRT_Storyline {
 		// specify thumbnail and overwrite featured image url
 		$thumbnail_id = get_post_thumbnail_id();
 		if ( !empty( $thumbnail_id ) ) {
+			$thumbnail = get_post( $thumbnail_id );
+		}
+		
+		if ( !empty( $thumbnail ) ) {
 			$item['thumbnail_url']         = $this->add_image_url( $thumbnail_id, 'smrt-phone-thumb' );
 			$item['thumbnail_url_x2']      = $this->add_image_url( $thumbnail_id, 'smrt-phone-thumb-x2' );
 			$item['featured_image_url']    = $this->add_image_url( $thumbnail_id, 'smrt-phone-feature' );
 			$item['featured_image_url_x2'] = $this->add_image_url( $thumbnail_id, 'smrt-phone-feature-x2' );
 			$item['credit'] =  get_post_meta( $thumbnail_id, 'drv_attachment_credit', true );
-			$item['caption'] = esc_html( get_post( $thumbnail_id )->post_excerpt );
+			$item['caption'] = esc_html( $thumbnail->post_excerpt );
 		}
 		
 		// return topics
@@ -306,8 +307,12 @@ class SMRT_Storyline {
 			return array();
 		}
 		$content = preg_replace( '/<span id=\"more-.*\"><\/span>/uim', "<!--more-->", $content );
-		$content = preg_replace( '/<!--more-->\\s*<\/p>/uim', '</p><!--more-->', $content );
 		$slides = explode( "<!--more-->", $content );
+		
+		// appy filters
+		for ($i = 0, $count = count( $slides ); $i < $count; $i++ ) {
+			$slides[$i] =  apply_filters( 'the_content', $slides[$i] );
+		}
 		
 		// clean up leading empty paragraphs, leading end paragraphs, trailing open paragraphs, and spacing
 		$slides = preg_replace( "/(^\\s*<p>\\s*&nbsp;\\s*<\/p>\\s*)|(^\\s*<\/p>\\s*)|(^\\s*)|(\\s*<p>\\s*$)|(\\s*$)/ui", "", $slides );
@@ -397,8 +402,9 @@ class SMRT_Storyline {
 	 * @uses wp_get_attachment_image_src
 	 * @uses esc_url
 	 */
-	public function modified_post_view( $content ) {
+	public function preview() {
 		global $post;
+		$content = get_the_content();
 		
 		if( $post->post_type !== 'storyline' || !is_preview() )
 			return $content;
@@ -476,6 +482,7 @@ class SMRT_Storyline {
 		if ( !is_feed() && !is_preview() )
 			return $content;
 		
+		// replace embedded WordPress images
 		$content = preg_replace_callback(
 			'/^.*<img[^>]+ wp-image-(\\d+)[^>]+>.*$/um',
 			function( $matches ) {
@@ -508,6 +515,9 @@ class SMRT_Storyline {
 			},
 			$content
 		);
+		
+		// replace embedded external images
+		$content = preg_replace("/<img [^>]*src=\"([^\"]+)\"[^>]*>/um", "<div class=\"story-image\" style=\"background: url('$1');\"></div>", $content);
 		
 		return $content;
 	}
@@ -926,4 +936,11 @@ class SMRT_Storyline {
 		wp_die();
 	} 
 }
+global $smrt_storyline;
 $smrt_storyline = new SMRT_Storyline();
+
+// create helper function for storyline preview
+function smrt_storyline_with_preview() {
+	global $smrt_storyline;
+	echo $smrt_storyline->preview();
+}
