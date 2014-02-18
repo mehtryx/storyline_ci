@@ -22,6 +22,7 @@ Activate the plugin, Access the storyline menu off the main dashboard.
 * Changed the alert notification message to include the story title
 * Added "extra" field on alert to include the postID in the "url" extra, this maps to same field were using on broadcasts
  to simplify client check (intval of "url == int is a story in the app, otherwise URL to external post" )
+* removed support for zoninator
 
 = 0.3.4 =
 * content cleanup fix
