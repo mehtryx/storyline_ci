@@ -18,27 +18,27 @@ Activate the plugin, Access the storyline menu off the main dashboard.
 To utilize the storyline preview functionality, modify the content.php file of your theme to look for storyline, if installed we call the smrt_storyline_with_preview
 method.
 
-		if ( !defined( 'SMRT_STORYLINE_VERSION' ) ) {
-			the_content( __( 'Continue reading <span class="meta-nav">&rarr;</span>', 'twentyfourteen' ) );
-		}
-		else {
-			smrt_storyline_with_preview();
-		}
+    if ( !defined( 'SMRT_STORYLINE_VERSION' ) ) {
+      the_content( __( 'Continue reading <span class="meta-nav">&rarr;</span>', 'twentyfourteen' ) );
+    }
+    else {
+      smrt_storyline_with_preview();
+    }
 			
 == Urban Airship Update notification message ==
 
-"{
-	"audience": {"tag":"POSTID"},
-	"notification": {
-		"ios": {
-			"alert":"Updated story - HEADLINE","extra":{"url":"POSTID"}
-		},
-		"android":{
-			"alert":"Updated story - HEADLINE","extra":{"url":"POSTID"}
-		}
-	},
-	"device_types":["ios","android"]
-}"
+{
+  "audience": {"tag":"POSTID"},
+  "notification": {
+    "ios": {
+      "alert":"Updated story - HEADLINE","extra":{"url":"POSTID"}
+    },
+    "android":{
+      "alert":"Updated story - HEADLINE","extra":{"url":"POSTID"}
+    }
+  },
+  "device_types":["ios","android"]
+}
 
 
 == Changelog ==
