@@ -517,7 +517,7 @@ class SMRT_Storyline {
 		);
 		
 		// replace embedded external images
-		$content = preg_replace( "/<img [^>]*src=\"([^\"]+)\"[^>]*>/um", "<div class=\"story-image\" style=\"background: url('$1');\"></div>", $content );
+		$content = preg_replace( "/<img [^>]*src=\"([^\"]+)\"[^>]*>/um", "<div class=\"story-image\" style=\"background-image: url('$1');\"></div>", $content );
 		
 		return $content;
 	}
