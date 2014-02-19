@@ -897,17 +897,16 @@ class SMRT_Storyline {
 		
 		if ( current_user_can( 'publish_posts' ) && $nonce ) {
 			$postID = intval( urldecode( $_POST['postID'] ) );
-			$post_title  = ( $postID ? get_the_title( $postID ) : null );
-			
-			// we need both otherwise this alert wont't work
-			if ( $postID && $post_title ) { 	
+			$post = get_post( $postID );
+
+			if ( $post ) { 	
 				$options = get_option( 'smrt_storyline_settings' );
 				$auth_combo = sanitize_text_field( $options['app_id'] ) . ':' . sanitize_text_field( $options['master_secret'] );
 				
 				// build push body as per v3 of Urban Airship push API 
 				// http://docs.urbanairship.com/reference/api/v3/push.html#push-object
 				$contents = array();
-				$contents['alert'] = 'Updated story - ' . $post_title;
+				$contents['alert'] = 'Updated story - ' . $post->post_title;
 				$contents['extra'] = array( 'url' => strval( $postID ) );
 				$notification = array();
 				$notification['ios'] = $contents;
