@@ -1,7 +1,7 @@
 === storyline ===
 Contributors: Edward de Groot, Donnie Marges, Waheed Ashraf, Keith Benedict, Goldwin Guenther
 Tested up to: 3.8
-Stable tag: 0.3.5
+Stable tag: 0.3.6
 License: MIT
 License URI: https://github.com/Postmedia/storyline/blob/master/LICENSE
 
@@ -42,6 +42,9 @@ method.
 
 
 == Changelog ==
+
+= 0.3.6 =
+* new filter to add storyline id to embedded links
 
 = 0.3.5 =
 * Handles embedding of non-wordpress images

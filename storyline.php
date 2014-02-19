@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.3.5
+Version: 0.3.6
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.3.5' );
+define( 'SMRT_STORYLINE_VERSION', '0.3.6' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -60,6 +60,7 @@ class SMRT_Storyline {
 		add_action( 'init', array( $this, 'register_storyline' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_alerts_meta_box' ) );
 		add_filter( 'the_content', array( $this, 'refactor_images' ), 99 ); 
+		add_filter( 'the_content', array( $this, 'add_storyline_id' ), 99 ); 
 		add_filter( 'json_feed_item',  array( $this ,'json_feed_items_with_slides' ), 10, 4 );
 		
 		// register ajax handler for topics
@@ -519,6 +520,44 @@ class SMRT_Storyline {
 		// replace embedded external images
 		$content = preg_replace( "/<img [^>]*src=\"([^\"]+)\"[^>]*>/um", "<div class=\"story-image\" style=\"background-image: url('$1');\"></div>", $content );
 		
+		return $content;
+	}
+	
+	/**
+	 * Adds storyline post id to embedded anchor tags
+	 * so that they can be opened directly in app
+	 *
+	 * @since 0.3.6
+	 *
+	 * @uses get_post_type()
+	 * @uses url_to_postid()
+	 */
+	public function add_storyline_id( $content ) {
+		global $post;
+		
+		// only apply to storylines
+		if( $post->post_type !== 'storyline' )
+			return $content;
+		
+		// only refactor for feeds and preview
+		if ( !is_feed() && !is_preview() )
+			return $content;
+		
+		$base = preg_quote( get_post_type_archive_link( 'storyline' ), '/' );
+		$search = '/<a ([^>]*)href="(' . $base . '[^"]+)"([^>]*)>/ui';
+		
+		$content = preg_replace_callback( $search, function( $matches ) {
+			$prefix = $matches[1];
+			$href = $matches[2];
+			$suffix = $matches[3];
+			$id = url_to_postid( $href );
+			
+			if ( empty( $id ) || 'storyline' !== get_post_type( $id ) ) {
+				return $matches[0];
+			} else {
+				return "<a ${prefix}href=\"${href}\" data-storyline=\"${id}\"${suffix}>";
+			}
+		}, $content );
 		return $content;
 	}
 	
