@@ -433,7 +433,7 @@ class SMRT_Storyline {
 			$slide_image = wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), 'smrt-phone-feature-x2' );
 		}
 		
-		return "<div class='smart-device-preview'>
+		echo "<div class='smart-device-preview'>
 					<div class='select-device'> 
 						<label for='phoneselector'>Select a device</label><br>
 						<select name='phoneselector' id='phoneselector'>
@@ -984,5 +984,5 @@ $smrt_storyline = new SMRT_Storyline();
 // create helper function for storyline preview
 function smrt_storyline_with_preview() {
 	global $smrt_storyline;
-	echo $smrt_storyline->preview();
+	$smrt_storyline->preview();
 }
