@@ -24,6 +24,16 @@ method.
     else {
       smrt_storyline_with_preview();
     }
+    
+ 
+Add this to functions.php to remove post_format=standard from querystring
+
+function smrt_post_format_parameter( $url ) {
+	$url = remove_query_arg( 'post_format', $url );
+	return $url;
+}
+add_filter( 'preview_post_link', 'smrt_post_format_parameter', 9999 );
+	
 			
 == Urban Airship Update notification message ==
 
