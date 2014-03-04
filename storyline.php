@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.3.6
+Version: 0.3.7
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.3.6' );
+define( 'SMRT_STORYLINE_VERSION', '0.3.7' );
 
 /**
  * Main Storyline Class contains registration and hooks
