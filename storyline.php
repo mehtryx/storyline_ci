@@ -619,7 +619,7 @@ class SMRT_Storyline {
 	public function storyline_order_asc( $orderby ) {
 		global $wpdb;
 		remove_filter( 'posts_orderby', array( $this, 'storyline_order_asc' ) );
-		return "CAST($wpdb->posts.post_date as date) ASC, $wpdb->posts.menu_order = 0 DESC, $wpdb->posts.menu_order DESC";
+		return "CAST($wpdb->posts.post_date as date) ASC, $wpdb->posts.menu_order = 0 DESC, $wpdb->posts.menu_order DESC, $wpdb->posts.post_date ASC";
 	}
 	
 	/**
@@ -634,7 +634,7 @@ class SMRT_Storyline {
 	public function storyline_order_desc( $orderby ) {
 		global $wpdb;
 		remove_filter( 'posts_orderby', array( $this, 'storyline_order_desc' ) );
-		return "CAST($wpdb->posts.post_date as date) DESC, $wpdb->posts.menu_order = 0 ASC, $wpdb->posts.menu_order ASC";
+		return "CAST($wpdb->posts.post_date as date) DESC, $wpdb->posts.menu_order = 0 ASC, $wpdb->posts.menu_order ASC, $wpdb->posts.post_date DESC";
 	}
 	
 	/**
