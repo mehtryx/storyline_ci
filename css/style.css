@@ -4,6 +4,10 @@
 
 /* end copy */
 
+/* OVERRIDES */
+body { background-color: #ffffff !important; }
+
+
 /* Fonts */
 
 @font-face {
