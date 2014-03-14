@@ -368,7 +368,7 @@ class SMRT_Storyline {
 			switch( $embed_name ) {
 				case 'youtube':
 					$parts = explode( '=', $attributes['url'] );
-					$url = '//youtube.com/embed/' . $parts[1];
+					$url = 'http://youtube.com/embed/' . $parts[1];
 
 					$short_code_replacement = sprintf('
 						<span class="embed embed-youtube"><iframe width="%s" height="%s" src="%s" class="youtube-player" type="text/html" frameborder="0"></iframe></span>
@@ -377,13 +377,13 @@ class SMRT_Storyline {
 
 				case 'soundcloud':
 				 	$short_code_replacement = sprintf('
-				 		<span class="embed embed-soundcloud"><iframe width="%s" height="%s" src="//w.soundcloud.com/player/?url=%s&#038;color=ff6600&#038;auto_play=false&#038;show_artwork=true"></iframe></span>
+				 		<span class="embed embed-soundcloud"><iframe width="%s" height="%s" src="http://w.soundcloud.com/player/?url=%s&#038;color=ff6600&#038;auto_play=false&#038;show_artwork=true"></iframe></span>
 				 		', $width, $height, urlencode( $attributes['url']) );
 				 	break;
 
 				case 'vine':
 				 	$short_code_replacement = sprintf('
-				 		<span class="embed embed-vine"><iframe width="%s" height="%s" src="%s/embed/simple" frameborder="0"></iframe><script charset="utf-8" type="text/javascript" src="//platform.vine.co/static/scripts/embed.js" async=""></script></span>
+				 		<span class="embed embed-vine"><iframe width="%s" height="%s" src="%s/embed/simple" frameborder="0"></iframe><script charset="utf-8" type="text/javascript" src="http://platform.vine.co/static/scripts/embed.js" async=""></script></span>
 				 		', $width, $height, $attributes['url'] );
 				 	break;
 
