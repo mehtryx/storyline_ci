@@ -176,7 +176,7 @@ class SMRT_Storyline {
 			$item['thumbnail_url_x2']      = $this->add_image_url( $thumbnail_id, 'smrt-phone-thumb-x2' );
 			$item['featured_image_url']    = $this->add_image_url( $thumbnail_id, 'smrt-phone-feature' );
 			$item['featured_image_url_x2'] = $this->add_image_url( $thumbnail_id, 'smrt-phone-feature-x2' );
-			$item['credit'] =  get_post_meta( $thumbnail_id, 'photo_credit', true );
+			$item['credit'] =  get_post_meta( $thumbnail_id, 'pn_attachment_credit', true );
 			$item['caption'] = esc_html( $thumbnail->post_excerpt );
 		}
 		
