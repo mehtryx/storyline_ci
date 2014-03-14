@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.3.7
+Version: 0.3.8
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.3.7' );
+define( 'SMRT_STORYLINE_VERSION', '0.3.8' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -176,7 +176,7 @@ class SMRT_Storyline {
 			$item['thumbnail_url_x2']      = $this->add_image_url( $thumbnail_id, 'smrt-phone-thumb-x2' );
 			$item['featured_image_url']    = $this->add_image_url( $thumbnail_id, 'smrt-phone-feature' );
 			$item['featured_image_url_x2'] = $this->add_image_url( $thumbnail_id, 'smrt-phone-feature-x2' );
-			$item['credit'] =  get_post_meta( $thumbnail_id, 'drv_attachment_credit', true );
+			$item['credit'] =  get_post_meta( $thumbnail_id, 'photo_credit', true );
 			$item['caption'] = esc_html( $thumbnail->post_excerpt );
 		}
 		
@@ -295,11 +295,12 @@ class SMRT_Storyline {
 		$image = wp_get_attachment_image_src( $thumbnail_id, $size );
 		return $image[0];
 	}
-	
+
 	/**
 	 * Converts a selection of content into an array of content items
 	 *
 	 * @since 0.1.1
+	 * @uses render_pd_short_code
 	 * @param string $content The text to convert
 	 * @return string[] An array of slides
 	 */
@@ -310,14 +311,102 @@ class SMRT_Storyline {
 		$content = preg_replace( '/<span id=\"more-.*\"><\/span>/uim', "<!--more-->", $content );
 		$slides = explode( "<!--more-->", $content );
 		
-		// appy filters
+		// apply filters
 		for ( $i = 0, $count = count( $slides ); $i < $count; $i++ ) {
+			// filter for our embed shortcodes
+			// [pd:youtube url=... layout=[full|fit]]
+			$slides[$i] = preg_replace_callback(
+					'/\[pd:(?<name>.*?)\s+(?<attributes>.*)\s*\]/i',
+					function($matches) {
+						return $this->render_pd_short_code($matches);
+					},
+					$slides[$i]
+				);
+
+			// apply wp filters
 			$slides[$i] =  apply_filters( 'the_content', $slides[$i] );
 		}
 		
 		// clean up leading empty paragraphs, leading end paragraphs, trailing open paragraphs, and spacing
 		$slides = preg_replace( "/(^\\s*<p>\\s*&nbsp;\\s*<\/p>\\s*)|(^\\s*<\/p>\\s*)|(^\\s*)|(\\s*<p>\\s*$)|(\\s*$)/ui", "", $slides );
 		return $slides;
+	}
+
+	/**
+	 * Replace callback to handle [pd:{embed name} url= width= height=] embed tags
+	 *
+	 * @since 0.3.8
+	 *
+	 * @param array $matches Matches from preg_replace_callback
+	 * @param bool $wrap_in_p Flag to wrap output in <p></p> tags
+	 * @return string Replacement string
+	 */
+	function render_pd_short_code( $matches, $wrap_in_p = true ) {
+		$attributes = array();
+		$short_code_replacement = '';
+
+		$embed_name = ( isset($matches['name']) ) ? $matches['name'] : null;
+		$embed_attribs = ( isset($matches['attributes']) ) ? $matches['attributes'] : null;
+
+		if( !$embed_name ) return '';
+
+		if( $embed_attribs ) {
+			$attribute_parts = explode( ' ', $embed_attribs );
+			foreach( $attribute_parts as $ap ) {
+				$ap_parts = explode( '=', $ap , 2 );
+
+				if( count($ap_parts) > 1 ) {
+					$attributes[$ap_parts[0]] = $ap_parts[1];
+				}
+			}
+		}
+
+		if( isset($embed_name) && isset($attributes['url']) ) {
+			$width = ( isset($attributes['width']) ) ? $attributes['width'] : '300';
+			$height = ( isset($attributes['height']) ) ? $attributes['height'] : '100%';
+
+			switch( $embed_name ) {
+				case 'youtube':
+					$parts = explode( '=', $attributes['url'] );
+					$url = '//youtube.com/embed/' . $parts[1];
+
+					$short_code_replacement = sprintf('
+						<span class="embed embed-youtube"><iframe width="%s" height="%s" src="%s" class="youtube-player" type="text/html" frameborder="0"></iframe></span>
+						', $width, $height, $url );
+					break;
+
+				case 'soundcloud':
+				 	$short_code_replacement = sprintf('
+				 		<span class="embed embed-soundcloud"><iframe width="%s" height="%s" src="//w.soundcloud.com/player/?url=%s&#038;color=ff6600&#038;auto_play=false&#038;show_artwork=true"></iframe></span>
+				 		', $width, $height, urlencode( $attributes['url']) );
+				 	break;
+
+				case 'vine':
+				 	$short_code_replacement = sprintf('
+				 		<span class="embed embed-vine"><iframe width="%s" height="%s" src="%s/embed/simple" frameborder="0"></iframe><script charset="utf-8" type="text/javascript" src="//platform.vine.co/static/scripts/embed.js" async=""></script></span>
+				 		', $width, $height, $attributes['url'] );
+				 	break;
+
+				case 'instagram':
+				 	$short_code_replacement = sprintf('
+				 		<span class="embed embed-instagram"><iframe width="%s" height="%s" src="%s/embed" frameborder="0"></iframe></span>
+				 		', $width, $height, $attributes['url'] );
+				 	break;
+
+				case 'twitter':
+				 	$short_code_replacement = sprintf('
+				 		<span class="embed embed-twitter">pd:twitter not available (w=%s, h=%s, url=%s)</span>
+				 		', $width, $height, $attributes['url'] );
+				 	break;
+			}
+
+			if( $wrap_in_p ) {
+				return '<p>' . trim( $short_code_replacement ) . '</p>';
+			}
+			else {
+				return trim( $short_code_replacement );
+			}
+		}
 	}
 	
 	/**
