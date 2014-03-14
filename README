@@ -1,7 +1,7 @@
 === storyline ===
 Contributors: Edward de Groot, Donnie Marges, Waheed Ashraf, Keith Benedict, Goldwin Guenther, Chris Murphy
 Tested up to: 3.8
-Stable tag: 0.3.8
+Stable tag: 0.3.9
 License: MIT
 License URI: https://github.com/Postmedia/storyline/blob/master/LICENSE
 
@@ -29,12 +29,12 @@ method.
 Add this to functions.php to remove post_format=standard from querystring
 
 function smrt_post_format_parameter( $url ) {
-	$url = remove_query_arg( 'post_format', $url );
-	return $url;
+  $url = remove_query_arg( 'post_format', $url );
+  return $url;
 }
 add_filter( 'preview_post_link', 'smrt_post_format_parameter', 9999 );
-	
-			
+  
+      
 == Urban Airship Update notification message ==
 
 {
@@ -53,8 +53,11 @@ add_filter( 'preview_post_link', 'smrt_post_format_parameter', 9999 );
 
 == Changelog ==
 
+= 0.3.9 =
+* Update to alert.js. Removed strong type comparison on UA response code. Sometimes is a number sometimes is a string...
+
 = 0.3.8 =
-* Added filtering for our custom shortcodes [pd.{embed name} attributes]
+* Added filtering for our custom shortcodes [pd:{embed name} attributes]
 
 = 0.3.7 =
 * Added additional sorting for when storyline posts have the same date '2014-02-01' and order set to '0'... so that those items obey the order.
@@ -146,12 +149,12 @@ add_filter( 'preview_post_link', 'smrt_post_format_parameter', 9999 );
 = 0.2.4 =
 
 * Initial version for VIP Review, contains the following features:
-	* hooked into json feed filters to extend and modify content for storyline feed
-	* register mobile image sizes and include in json feed
-	* custom post type 'storyline' created
-	* custom taxonomy called "topics" (smrt-topic)
-	* storyline post position and count added to json feed
-	* post format added to feed for styling on client
-	* support for ordering storylines via menu_order
-	* show preview of post in post editor screen (on preview only)
+  * hooked into json feed filters to extend and modify content for storyline feed
+  * register mobile image sizes and include in json feed
+  * custom post type 'storyline' created
+  * custom taxonomy called "topics" (smrt-topic)
+  * storyline post position and count added to json feed
+  * post format added to feed for styling on client
+  * support for ordering storylines via menu_order
+  * show preview of post in post editor screen (on preview only)
 
