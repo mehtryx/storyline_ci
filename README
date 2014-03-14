@@ -54,7 +54,7 @@ add_filter( 'preview_post_link', 'smrt_post_format_parameter', 9999 );
 == Changelog ==
 
 = 0.3.8 =
-* Added filtering for our custom shortcodes [pd:{embed name} attributes]
+* Added filtering for our custom shortcodes [pd.{embed name} attributes]
 
 = 0.3.7 =
 * Added additional sorting for when storyline posts have the same date '2014-02-01' and order set to '0'... so that those items obey the order.

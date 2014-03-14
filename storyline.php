@@ -314,9 +314,9 @@ class SMRT_Storyline {
 		// apply filters
 		for ( $i = 0, $count = count( $slides ); $i < $count; $i++ ) {
 			// filter for our embed shortcodes
-			// [pd:youtube url=... layout=[full|fit]]
+			// [pd.youtube url=... layout=[full|fit]]
 			$slides[$i] = preg_replace_callback(
-					'/\[pd:(?<name>.*?)\s+(?<attributes>.*)\s*\]/i',
+					'/\[pd\.(?<name>.*?)\s+(?<attributes>.*)\s*\]/i',
 					function($matches) {
 						return $this->render_pd_short_code($matches);
 					},
@@ -333,7 +333,7 @@ class SMRT_Storyline {
 	}
 
 	/**
-	 * Replace callback to handle [pd:{embed name} url= width= height=] embed tags
+	 * Replace callback to handle [pd.{embed name} url= width= height=] embed tags
 	 *
 	 * @since 0.3.8
 	 *
@@ -356,7 +356,7 @@ class SMRT_Storyline {
 				$ap_parts = explode( '=', $ap , 2 );
 
 				if( count($ap_parts) > 1 ) {
-					$attributes[$ap_parts[0]] = $ap_parts[1];
+					$attributes[$ap_parts[0]] = trim($ap_parts[1], " \"'");
 				}
 			}
 		}
