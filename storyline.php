@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.3.8
+Version: 0.3.9
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.3.8' );
+define( 'SMRT_STORYLINE_VERSION', '0.3.9' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -310,7 +310,7 @@ class SMRT_Storyline {
 		}
 		$content = preg_replace( '/<span id=\"more-.*\"><\/span>/uim', "<!--more-->", $content );
 		$slides = explode( "<!--more-->", $content );
-		
+
 		// apply filters
 		for ( $i = 0, $count = count( $slides ); $i < $count; $i++ ) {
 			// filter for our embed shortcodes
@@ -318,7 +318,7 @@ class SMRT_Storyline {
 			$slides[$i] = preg_replace_callback(
 					'/\[pd\.(?<name>.*?)\s+(?<attributes>.*)\s*\]/i',
 					function($matches) {
-						return $this->render_pd_short_code($matches);
+						return SMRT_Storyline::render_pd_short_code($matches, true);
 					},
 					$slides[$i]
 				);
@@ -341,7 +341,7 @@ class SMRT_Storyline {
 	 * @param bool $wrap_in_p Flag to wrap output in <p></p> tags
 	 * @return string Replacement string
 	 */
-	function render_pd_short_code( $matches, $wrap_in_p = true ) {
+	public static function render_pd_short_code( $matches, $wrap_in_p = false ) {
 		$attributes = array();
 		$short_code_replacement = '';
 
