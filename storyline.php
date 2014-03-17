@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.3.9
+Version: 0.4.0
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,12 +37,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.3.9' );
+define( 'SMRT_STORYLINE_VERSION', '0.4.0' );
 
 /**
  * Main Storyline Class contains registration and hooks
  */
 class SMRT_Storyline {
+
+	// Whitelist for embeds
+	public static $embed_domain_whitelist = array( 'youtube.com', 'vine.co', 'soundcloud.com', 'instagram.com', 'twitter.com', 'vimeo.com' );
 	
 	/**
 	 * Class construct registers image sizes, actions, and filters
@@ -313,8 +316,7 @@ class SMRT_Storyline {
 
 		// apply filters
 		for ( $i = 0, $count = count( $slides ); $i < $count; $i++ ) {
-			// filter for our embed shortcodes
-			// [pd.youtube url=... layout=[full|fit]]
+			// filter for our embed shortcodes - [pd.youtube url=... width=[300|100%]]
 			$slides[$i] = preg_replace_callback(
 					'/\[pd\.(?<name>.*?)\s+(?<attributes>.*)\s*\]/i',
 					function($matches) {
@@ -350,6 +352,7 @@ class SMRT_Storyline {
 
 		if( !$embed_name ) return '';
 
+		// extract attributes
 		if( $embed_attribs ) {
 			$attribute_parts = explode( ' ', $embed_attribs );
 			foreach( $attribute_parts as $ap ) {
@@ -362,9 +365,39 @@ class SMRT_Storyline {
 		}
 
 		if( isset($embed_name) && isset($attributes['url']) ) {
-			$width = ( isset($attributes['width']) ) ? $attributes['width'] : '300';
-			$height = ( isset($attributes['height']) ) ? $attributes['height'] : '100%';
+			// validate that domain is a whitelisted domain
+			$domain = parse_url( $attributes['url'] );
 
+			$allowed = false;
+			foreach( SMRT_Storyline::$embed_domain_whitelist as $white ) {
+				if( strpos( $domain['host'], $white ) !== false ) {
+					$allowed = true;
+					break;
+				}
+			}
+
+			if( !$allowed ) return '<!-- Not an allowed embed domain: ' . $domain['host'] . ' -->';
+
+			// set width / height
+			$width = ( isset($attributes['width']) ) ? ( $attributes['width'] ) : '300';
+			$height = ( isset($attributes['height']) ) ? ( $attributes['height'] ) : '300';
+
+			// input validations
+			if( substr( $width, -1 ) == '%' ) {
+				$width = intval( substr( $width, 0, -1 ) ) . '%';
+			}
+			else {
+				$width = intval( $width );
+			}
+
+			if( substr( $height, -1 ) == '%' ) {
+				$height = intval( substr( $height, 0, -1 ) ) . '%';
+			}
+			else {
+				$height = intval( $height );
+			}
+
+			// generate embed code based on shortcode name
 			switch( $embed_name ) {
 				case 'youtube':
 					$parts = explode( '=', $attributes['url'] );
@@ -372,34 +405,44 @@ class SMRT_Storyline {
 
 					$short_code_replacement = sprintf('
 						<span class="embed embed-youtube"><iframe width="%s" height="%s" src="%s" class="youtube-player" type="text/html" frameborder="0"></iframe></span>
-						', $width, $height, $url );
+						', $width, $height, esc_url( $url ) );
 					break;
 
 				case 'soundcloud':
 				 	$short_code_replacement = sprintf('
 				 		<span class="embed embed-soundcloud"><iframe width="%s" height="%s" src="http://w.soundcloud.com/player/?url=%s&#038;color=ff6600&#038;auto_play=false&#038;show_artwork=true"></iframe></span>
-				 		', $width, $height, urlencode( $attributes['url']) );
+				 		', $width, $height, esc_url( urlencode( $attributes['url']) ) );
 				 	break;
 
 				case 'vine':
 				 	$short_code_replacement = sprintf('
 				 		<span class="embed embed-vine"><iframe width="%s" height="%s" src="%s/embed/simple" frameborder="0"></iframe><script charset="utf-8" type="text/javascript" src="http://platform.vine.co/static/scripts/embed.js" async=""></script></span>
-				 		', $width, $height, $attributes['url'] );
+				 		', $width, $height, esc_url( $attributes['url'] ) );
 				 	break;
 
 				case 'instagram':
 				 	$short_code_replacement = sprintf('
 				 		<span class="embed embed-instagram"><iframe width="%s" height="%s" src="%s/embed" frameborder="0"></iframe></span>
-				 		', $width, $height, $attributes['url'] );
+				 		', $width, $height, esc_url( $attributes['url'] ) );
+				 	break;
+
+				case 'vimeo':
+					$id = intval( substr( $attributes['url'], strpos( $attributes['url'], '/' ) + 1 ) );
+					$url = 'http://player.vimeo.com/video/' . $id;
+
+				 	$short_code_replacement = sprintf('
+				 		<span class="embed embed-vimeo"><iframe width="%s" height="%s" src="%s/embed" frameborder="0"></iframe></span>
+				 		', $width, $height, esc_url( $url ) );
 				 	break;
 
 				case 'twitter':
 				 	$short_code_replacement = sprintf('
-				 		<span class="embed embed-twitter">pd:twitter not available (w=%s, h=%s, url=%s)</span>
-				 		', $width, $height, $attributes['url'] );
+				 		<span class="embed embed-twitter">pd.twitter not available (w=%s, h=%s, url=%s)</span>
+				 		', $width, $height, esc_url( $attributes['url'] ) );
 				 	break;
 			}
 
+			// generate / clean final output
 			if( $wrap_in_p ) {
 				return '<p>' . trim( $short_code_replacement ) . '</p>';
 			}
