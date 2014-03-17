@@ -427,11 +427,11 @@ class SMRT_Storyline {
 				 	break;
 
 				case 'vimeo':
-					$id = intval( substr( $attributes['url'], strpos( $attributes['url'], '/' ) + 1 ) );
+					$id = intval( substr( $attributes['url'], strrpos( $attributes['url'], '/', -1 ) + 1 ) );
 					$url = 'http://player.vimeo.com/video/' . $id;
 
 				 	$short_code_replacement = sprintf('
-				 		<span class="embed embed-vimeo"><iframe width="%s" height="%s" src="%s/embed" frameborder="0"></iframe></span>
+				 		<span class="embed embed-vimeo"><iframe width="%s" height="%s" src="%s" frameborder="0"></iframe></span>
 				 		', $width, $height, esc_url( $url ) );
 				 	break;
 
