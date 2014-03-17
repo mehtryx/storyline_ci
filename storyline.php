@@ -366,13 +366,15 @@ class SMRT_Storyline {
 
 		if( isset($embed_name) && isset($attributes['url']) ) {
 			// validate that domain is a whitelisted domain
-			$domain = parse_url( $attributes['url'] );
+			$domain = parse_url( urldecode( $attributes['url'] ) );
 
 			$allowed = false;
-			foreach( SMRT_Storyline::$embed_domain_whitelist as $white ) {
-				if( strpos( $domain['host'], $white ) !== false ) {
-					$allowed = true;
-					break;
+			if( isset($domain['host']) ) {
+				foreach( SMRT_Storyline::$embed_domain_whitelist as $white ) {
+					if( strpos( $domain['host'], $white ) !== false ) {
+						$allowed = true;
+						break;
+					}
 				}
 			}
 
@@ -409,9 +411,12 @@ class SMRT_Storyline {
 					break;
 
 				case 'soundcloud':
+					$id = intval( substr( $attributes['url'], strrpos( $attributes['url'], '/', -1 ) + 1 ) );
+					$url = 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/' . $id . '&amp;color=ff6600&amp;auto_play=false&amp;show_artwork=true';
+				 	
 				 	$short_code_replacement = sprintf('
-				 		<span class="embed embed-soundcloud"><iframe width="%s" height="%s" src="http://w.soundcloud.com/player/?url=%s&#038;color=ff6600&#038;auto_play=false&#038;show_artwork=true"></iframe></span>
-				 		', $width, $height, esc_url( urlencode( $attributes['url']) ) );
+				 		<span class="embed embed-soundcloud"><iframe width="%s" height="%s" src="%s"></iframe></span>
+				 		', $width, $height, esc_url( $url ) );
 				 	break;
 
 				case 'vine':
