@@ -1,7 +1,7 @@
 === storyline ===
 Contributors: Edward de Groot, Donnie Marges, Waheed Ashraf, Keith Benedict, Goldwin Guenther, Chris Murphy
 Tested up to: 3.8
-Stable tag: 0.3.9
+Stable tag: 0.4.0
 License: MIT
 License URI: https://github.com/Postmedia/storyline/blob/master/LICENSE
 
@@ -52,6 +52,9 @@ add_filter( 'preview_post_link', 'smrt_post_format_parameter', 9999 );
 
 
 == Changelog ==
+
+= 0.4.0 =
+* Added escaping/validation, url whitelist, extra shortcodes.
 
 = 0.3.9 =
 * Update to alert.js. Removed strong type comparison on UA response code. Sometimes is a number sometimes is a string...
