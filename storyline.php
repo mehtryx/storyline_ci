@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.4.0
+Version: 0.4.2
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,16 +37,13 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.4.0' );
+define( 'SMRT_STORYLINE_VERSION', '0.4.2' );
 
 /**
  * Main Storyline Class contains registration and hooks
  */
 class SMRT_Storyline {
 
-	// Whitelist for embeds
-	public static $embed_domain_whitelist = array( 'youtube.com', 'vine.co', 'soundcloud.com', 'instagram.com', 'twitter.com', 'vimeo.com' );
-	
 	/**
 	 * Class construct registers image sizes, actions, and filters
 	 *
@@ -64,6 +61,7 @@ class SMRT_Storyline {
 		add_action( 'add_meta_boxes', array( $this, 'add_alerts_meta_box' ) );
 		add_filter( 'the_content', array( $this, 'refactor_images' ), 99 ); 
 		add_filter( 'the_content', array( $this, 'add_storyline_id' ), 99 ); 
+		add_filter( 'the_content', array( $this, 'process_pd_shortcodes' ), 99 ); 
 		add_filter( 'json_feed_item',  array( $this ,'json_feed_items_with_slides' ), 10, 4 );
 		
 		// register ajax handler for topics
@@ -316,16 +314,6 @@ class SMRT_Storyline {
 
 		// apply filters
 		for ( $i = 0, $count = count( $slides ); $i < $count; $i++ ) {
-			// filter for our embed shortcodes - [pd.youtube url=... width=[300|100%]]
-			$slides[$i] = preg_replace_callback(
-					'/\[pd\.(?<name>.*?)\s+(?<attributes>.*)\s*\]/i',
-					function($matches) {
-						return SMRT_Storyline::render_pd_short_code($matches, true);
-					},
-					$slides[$i]
-				);
-
-			// apply wp filters
 			$slides[$i] =  apply_filters( 'the_content', $slides[$i] );
 		}
 		
@@ -335,22 +323,48 @@ class SMRT_Storyline {
 	}
 
 	/**
+	 * Content filter hook to render our custom shortcodes
+	 *
+	 * @since 0.4.1
+	 * @uses render_pd_short_code
+	 * @param string $content Content In
+	 * @return string $content Content Out
+	 */
+	function process_pd_shortcodes( $content ) {
+		global $post;
+		
+		// only refactor for storylines
+		if( $post->post_type != 'storyline' )
+			return $content;
+		
+		// filter for our embed shortcodes - [pd.youtube url=... width=[300|100%]]
+		$content = preg_replace_callback(
+				'/\[pd\.(?<name>.*?)\s+(?<attributes>.*)\s*\]/i',
+				function($matches) {
+					return SMRT_Storyline::render_pd_short_code($matches);
+				},
+				$content
+			);
+
+		return $content;
+	}
+
+	/**
 	 * Replace callback to handle [pd.{embed name} url= width= height=] embed tags
 	 *
 	 * @since 0.3.8
 	 *
 	 * @param array $matches Matches from preg_replace_callback
-	 * @param bool $wrap_in_p Flag to wrap output in <p></p> tags
 	 * @return string Replacement string
 	 */
-	public static function render_pd_short_code( $matches, $wrap_in_p = false ) {
+	public static function render_pd_short_code( $matches ) {
 		$attributes = array();
 		$short_code_replacement = '';
 
 		$embed_name = ( isset($matches['name']) ) ? $matches['name'] : null;
 		$embed_attribs = ( isset($matches['attributes']) ) ? $matches['attributes'] : null;
 
-		if( !$embed_name ) return '';
+		if( !$embed_name ) return '<!-- could not read shortcode name -->';
 
 		// extract attributes
 		if( $embed_attribs ) {
@@ -364,25 +378,13 @@ class SMRT_Storyline {
 			}
 		}
 
-		if( isset($embed_name) && isset($attributes['url']) ) {
-			// validate that domain is a whitelisted domain
-			$domain = parse_url( urldecode( $attributes['url'] ) );
-
-			$allowed = false;
-			if( isset($domain['host']) ) {
-				foreach( SMRT_Storyline::$embed_domain_whitelist as $white ) {
-					if( strpos( $domain['host'], $white ) !== false ) {
-						$allowed = true;
-						break;
-					}
-				}
-			}
-
-			if( !$allowed ) return '<!-- Not an allowed embed domain: ' . $domain['host'] . ' -->';
+		if( isset($embed_name) && ( isset($attributes['url']) || isset($attributes['id']) ) ) {
+			$url = ( isset($attributes['url']) ) ? $attributes['url'] : null;
+			$embed_id = ( isset($attributes['id']) ) ? $attributes['id'] : null;
 
 			// set width / height
-			$width = ( isset($attributes['width']) ) ? ( $attributes['width'] ) : '300';
-			$height = ( isset($attributes['height']) ) ? ( $attributes['height'] ) : '300';
+			$width = ( isset($attributes['width']) ) ? $attributes['width'] : '300';
+			$height = ( isset($attributes['height']) ) ? $attributes['height'] : '300';
 
 			// input validations
 			if( substr( $width, -1 ) == '%' ) {
@@ -399,61 +401,165 @@ class SMRT_Storyline {
 				$height = intval( $height );
 			}
 
+			$embed_type = 'iframe';
+			$embed_string = '';
+			
 			// generate embed code based on shortcode name
 			switch( $embed_name ) {
 				case 'youtube':
-					$parts = explode( '=', $attributes['url'] );
-					$url = 'http://youtube.com/embed/' . $parts[1];
+					if( $url ) {
+						$parts = explode( '=', $url );
+						$embed_id = isset( $parts[1] ) ? $parts[1] : null;
+					}
 
-					$short_code_replacement = sprintf('
-						<span class="embed embed-youtube"><iframe width="%s" height="%s" src="%s" class="youtube-player" type="text/html" frameborder="0"></iframe></span>
-						', $width, $height, esc_url( $url ) );
+					if( !$embed_id ) return '<!-- youtube embed error : invalid id -->';
+
+					$embed_string = 'http://youtube.com/embed/' . $embed_id;
+
 					break;
 
 				case 'soundcloud':
-					$id = intval( substr( $attributes['url'], strrpos( $attributes['url'], '/', -1 ) + 1 ) );
-					$url = 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/' . $id . '&amp;color=ff6600&amp;auto_play=false&amp;show_artwork=true';
+					if( $url ) {
+						$embed_id = substr( $url, strrpos( $url, '/', -1 ) + 1 );
+					}
+
+					if( !$embed_id ) return '<!-- soundcloud embed error : invalid id -->';
+
+					$embed_string = 'https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/' . $embed_id . '&amp;color=ff6600&amp;auto_play=false&amp;show_artwork=true';
 				 	
-				 	$short_code_replacement = sprintf('
-				 		<span class="embed embed-soundcloud"><iframe width="%s" height="%s" src="%s"></iframe></span>
-				 		', $width, $height, esc_url( $url ) );
 				 	break;
 
 				case 'vine':
-				 	$short_code_replacement = sprintf('
-				 		<span class="embed embed-vine"><iframe width="%s" height="%s" src="%s/embed/simple" frameborder="0"></iframe><script charset="utf-8" type="text/javascript" src="http://platform.vine.co/static/scripts/embed.js" async=""></script></span>
-				 		', $width, $height, esc_url( $attributes['url'] ) );
+					if( $url ) {
+						$embed_id = substr( $url, strrpos( $url, '/', -1 ) + 1 );
+					}
+
+					if( !$embed_id ) return '<!-- vine embed error : invalid id -->';
+
+					$embed_string = 'https://vine.co/v/' . $embed_id . '/embed/simple';
+
 				 	break;
 
 				case 'instagram':
-				 	$short_code_replacement = sprintf('
-				 		<span class="embed embed-instagram"><iframe width="%s" height="%s" src="%s/embed" frameborder="0"></iframe></span>
-				 		', $width, $height, esc_url( $attributes['url'] ) );
+					if( $url ) {
+						$embed_id = substr( $url, strrpos( $url, '/', -1 ) + 1 );
+					}
+
+					if( !$embed_id ) return '<!-- instagram embed error : invalid id -->';
+
+					$embed_string = 'https://instagram.com/p/' . $embed_id . '/embed';
+
 				 	break;
 
 				case 'vimeo':
-					$id = intval( substr( $attributes['url'], strrpos( $attributes['url'], '/', -1 ) + 1 ) );
-					$url = 'http://player.vimeo.com/video/' . $id;
+					if( $url ) {
+						$embed_id = substr( $url, strrpos( $url, '/', -1 ) + 1 );
+					}
 
-				 	$short_code_replacement = sprintf('
-				 		<span class="embed embed-vimeo"><iframe width="%s" height="%s" src="%s" frameborder="0"></iframe></span>
-				 		', $width, $height, esc_url( $url ) );
+					if( !$embed_id ) return '<!-- vimeo embed error : invalid id -->';
+
+					$embed_string = 'http://player.vimeo.com/video/' . $embed_id;
+
 				 	break;
 
 				case 'twitter':
-				 	$short_code_replacement = sprintf('
-				 		<span class="embed embed-twitter">pd.twitter not available (w=%s, h=%s, url=%s)</span>
-				 		', $width, $height, esc_url( $attributes['url'] ) );
+					// check for the correct libraries
+					if( !class_exists('\Codebird\Codebird') ) {
+						return '<!-- twitter embed error : codebird library not installed -->';
+					}
+					else if( !function_exists('curl_init') ) {
+						return '<!-- twitter embed error : curl not installed -->';
+					}
+
+					// load settings options
+					$options = get_option( 'smrt_twitterapi_settings' );
+
+					if( !isset($options['consumer_key']) || !isset($options['consumer_secret']) || !isset($options['oauth_token']) || !isset($options['oauth_secret']) ) {
+						return '<!-- twitter embed error : settings > storyline > twitter settings not set -->';
+					}
+
+					// set codebird consumer key/secret
+					\Codebird\Codebird::setConsumerKey($options['consumer_key'], $options['consumer_secret']);
+					$codebird = WP_Codebird::getInstance();
+					$codebird->setToken($options['oauth_token'], $options['oauth_secret']);
+
+					$embed_type = 'html';
+					
+					if( $url ) {
+						$embed_id = substr( $url, strrpos( $url, '/', -1 ) + 1 );
+					}
+					
+					if( !$embed_id ) {
+						return '<!-- twitter embed error : invalid id -->';
+					}
+					else {
+						// retrieve tweet and generate html
+						$tweet = $codebird->statuses_show_ID('id='.$embed_id);
+
+						if( !isset($tweet->text) ) {
+							return '<!-- twitter embed error : could not retrieve tweet -->';
+						}
+
+						// format tweet text
+						$twttxt = $tweet->text;
+
+						foreach($tweet->entities->media as $tm) {
+							$str = sprintf('<a href="%s">%s</a>', esc_attr($tm->url), $tm->display_url);
+							$twttxt = substr_replace($twttxt, $str, $tm->indices[0], $tm->indices[1] - $tm->indices[0]);
+						}
+
+						$embed_string = sprintf('
+							<div class="embed embed-twitter">
+	                            <div class="profile">
+	                            	<a href="%6$s">
+		                                <img class="profilepic" src="%5$s">
+		                                <div class="name">
+		                                    <span class="name">%1$s</span>
+		                                    <div class="clear"></div>
+		                                    <span class="hand">@%2$s</span>
+		                                </div>
+	                                </a>
+	                                <a href="%7$s"><img class="twitter-plus" src="resources/images/twitter/twitter-plus.png"></a>
+	                                <a href="%7$s"><img class="twitter" src="resources/images/twitter/twitter.png"></a>
+	                            </div>
+	                            <div class="quote">
+	                                <div class="bg-blue">
+	                                    <div class="blue-box">
+		                                    <p class="tweet-quote">%3$s</p>
+		                                    <span class="date">%4$s</span>
+		                                    <a href="%10$s"><img class="follow" src="resources/images/twitter/follow-btn.png"></a>
+		                                    <a href="%9$s"><img class="loop" src="resources/images/twitter/loop-btn.png"></a>
+		                                    <a href="%8$s"><img class="reply" src="resources/images/twitter/reply-btn.png"></a>
+	                                    </div>
+	                                </div>
+	                            </div>
+	                        </div>',
+	                        $tweet->user->name,
+	                        $tweet->user->screen_name,
+	                        $twttxt,
+	                        date( 'j M y', strtotime($tweet->created_at) ),
+	                        esc_attr( $tweet->user->profile_image_url ),
+	                        esc_attr( $tweet->user->url ),
+	                        'https://twitter.com/'. $tweet->user->screen_name .'?tw_i='. $tweet->id_str,
+	                        'https://twitter.com/intent/tweet?in_reply_to='. $tweet->id_str,
+	                        'https://twitter.com/intent/retweet?tweet_id='. $tweet->id_str,
+	                        'https://twitter.com/intent/favorite?tweet_id='. $tweet->id_str
+	                        );
+					}
+
 				 	break;
 			}
 
-			// generate / clean final output
-			if( $wrap_in_p ) {
-				return '<p>' . trim( $short_code_replacement ) . '</p>';
+			// build html
+			if( $embed_type == 'html' ) {
+				$short_code_replacement = trim($embed_string);
 			}
 			else {
-				return trim( $short_code_replacement );
+				$short_code_replacement = sprintf('<span class="embed embed-%s"><iframe width="%s" height="%s" src="%s" frameborder="0"></iframe></span>', esc_attr( $embed_name ), $width, $height, esc_url( trim($embed_string) ) );
 			}
+
+			// return final output
+			return $short_code_replacement;
 		}
 	}
 	
@@ -545,7 +651,7 @@ class SMRT_Storyline {
 		$content = get_the_content();
 		
 		if( $post->post_type !== 'storyline' || !is_preview() )
-			return $content;
+			echo $content;
 		
 		// This header is hardcoded, there is no variables in it to escape
 		$hardcoded_header = "<div class='x-container x-toolbar-dark x-toolbar x-navigation-bar x-stretched x-paint-monitored x-layout-box-item' id='ext-titlebar-1'><div class='x-body' id='ext-element-13'><div class='x-center' id='ext-element-14'><div class='x-unsized x-title x-floating' id='ext-title-1' style='z-index: 8 !important;'><div class='x-innerhtml' id='ext-element-12'></div></div></div><div class='x-inner x-toolbar-inner x-horizontal x-align-stretch x-pack-start x-layout-box' id='ext-element-9'><div class='x-container x-size-monitored x-paint-monitored x-layout-box-item x-stretched' id='ext-container-1' style='position: relative;'><div class='x-inner x-horizontal x-align-center x-pack-start x-layout-box' id='ext-element-10' style=''><div class='x-img x-img-image x-img-background x-sized x-paint-monitored x-size-monitored x-layout-box-item' id='nav_btn' style='width: 50px !important; height: 50px !important; background-image: url('/wp-content/plugins/storyline/img/toolbar/icon-menu.png');'><div class='x-paint-monitor overflowchange'></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 51px; height: 51px;'></div></div><div class='shrink'><div style='width: 50px; height: 50px;'></div></div></div></div><div class='x-img x-img-image x-img-background x-sized x-paint-monitored x-size-monitored x-layout-box-item' id='nav_icon' style='width: 42px !important; height: 48px !important; background-image: url('/wp-content/plugins/storyline/img/logo.png');'><div class='x-paint-monitor overflowchange'></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 43px; height: 49px;'></div></div><div class='shrink'><div style='width: 42px; height: 48px;'></div></div></div></div></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 93px; height: 51px;'></div></div><div class='shrink'><div style='width: 92px; height: 50px;'></div></div></div><div class='x-paint-monitor overflowchange'></div></div><div class='x-size-monitored x-paint-monitored x-layout-box-item x-flexed x-stretched' id='ext-component-1' style='position: relative; -webkit-box-flex: 1;'><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 1128.71875px; height: 51px;'></div></div><div class='shrink'><div style='width: 1127.71875px; height: 50px;'></div></div></div><div class='x-paint-monitor overflowchange'></div></div><div class='x-container x-size-monitored x-paint-monitored x-layout-box-item x-stretched' id='ext-container-2' style='position: relative;'><div class='x-inner x-horizontal x-align-center x-pack-start x-layout-box' id='ext-element-11' style=''><div class='x-img x-img-image x-img-background x-sized x-paint-monitored x-size-monitored x-layout-box-item' id='bt_alert' style='width: 50px !important; height: 50px !important; background-image: url('/wp-content/plugins/storyline/img/toolbar/icon-alerts-active.png');'><div class='x-paint-monitor overflowchange'></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 51px; height: 51px;'></div></div><div class='shrink'><div style='width: 50px; height: 50px;'></div></div></div></div></div><div class='x-size-monitors overflowchanged'><div class='expand'><div style='width: 51px; height: 51px;'></div></div><div class='shrink'><div style='width: 50px; height: 50px;'></div></div></div><div class='x-paint-monitor overflowchange'></div></div></div></div><div class='x-paint-monitor overflowchange'></div></div>";
@@ -838,10 +944,6 @@ class SMRT_Storyline {
 		wp_die();
 	}
 	
-	/*
-		-------- Urban Airship support for storyline below this comment ----------
-	*/
-	
 	/**
 	 * Create the settings page, contains fields for urban airship application.
 	 *
@@ -863,10 +965,23 @@ class SMRT_Storyline {
 	 * @uses add_settings_field
 	 */
 	function register_settings() {
+		// URBAN AIRSHIP
 		register_setting( 'smrt_storyline_settings', 'smrt_storyline_settings', array( $this, 'sanitize_settings' ) );
+		
 		add_settings_section( 'smrt_storyline_main', 'Storyline Plugin Settings', array( $this, 'settings_help' ), 'storyline-settings' );
+		
 		add_settings_field( 'smrt_ua_app_id', 'Application ID', array( $this, 'render_app_id_setting'), 'storyline-settings', 'smrt_storyline_main' );
 		add_settings_field( 'smrt_ua_master_secret', 'Master Secret', array( $this, 'render_master_secret_setting') , 'storyline-settings', 'smrt_storyline_main' );
+	
+		// TWITTER
+		register_setting( 'smrt_twitterapi_settings', 'smrt_twitterapi_settings', array( $this, 'sanitize_settings' ) );
+		
+		add_settings_section( 'smrt_twitterapi_main', 'TwitterAPI Plugin Settings', array( $this, 'settings_twitter_help' ), 'twitterapi-settings' );
+		
+		add_settings_field( 'smrt_twitterapi_consumer_key', 'API Key', array( $this, 'render_consumer_key_setting'), 'twitterapi-settings', 'smrt_twitterapi_main' );
+		add_settings_field( 'smrt_twitterapi_consumer_secret', 'API Secret', array( $this, 'render_consumer_secret_setting') , 'twitterapi-settings', 'smrt_twitterapi_main' );
+		add_settings_field( 'smrt_twitterapi_oauth_token', 'Access Token', array( $this, 'render_oauth_token_setting') , 'twitterapi-settings', 'smrt_twitterapi_main' );
+		add_settings_field( 'smrt_twitterapi_oauth_token_secret', 'Access Token Secret', array( $this, 'render_oauth_token_secret_setting') , 'twitterapi-settings', 'smrt_twitterapi_main' );
 	}
 	
 	/**
@@ -910,6 +1025,9 @@ class SMRT_Storyline {
 				<?php
 				settings_fields( 'smrt_storyline_settings' );
 				do_settings_sections( 'storyline-settings' );
+				
+				settings_fields( 'smrt_twitterapi_settings' );
+				do_settings_sections( 'twitterapi-settings' );
 				?>
 				<input name="submit" type="submit" value="Save Changes" />
 			</form>
@@ -924,6 +1042,15 @@ class SMRT_Storyline {
 	 */
 	function settings_help() {
 		echo '<p>Supply the AppID and Master secret for the Urban Airship application you wish to send update notices too.</p>';
+	}
+
+	/**
+	 * Render help text for settings page
+	 * 
+	 * @since 0.1.0
+	 */
+	public function settings_twitter_help() {
+		echo '<p>Supply API Key/Secret & Access Token/Secret from apps.twitter.com.</p>';
 	}
 	
 	/**
@@ -953,6 +1080,50 @@ class SMRT_Storyline {
 	}
 	
 	/**
+	 * Render Consumer Key settings field
+	 *
+	 * @since 0.1.0
+	 */
+	public function render_consumer_key_setting() {
+		$options = get_option( 'smrt_twitterapi_settings' );
+		$val = isset( $options['consumer_key'] ) ? $options['consumer_key'] : '';
+		echo '<input type="text" class="regular-text" name="smrt_twitterapi_settings[consumer_key]" value="' . esc_attr( $val ) . '"/>';
+	}
+	
+	/**
+	 * Render Consumer Secret settings field
+	 *
+	 * @since 0.1.0
+	 */
+	public function render_consumer_secret_setting() {
+		$options = get_option( 'smrt_twitterapi_settings' );
+		$val = isset( $options['consumer_secret'] ) ? $options['consumer_secret'] : '';
+		echo '<input type="text" class="regular-text" name="smrt_twitterapi_settings[consumer_secret]" value="' . esc_attr( $val ) . '"/>';
+	}
+	
+	/**
+	 * Render OAuth Token settings field
+	 *
+	 * @since 0.1.0
+	 */
+	public function render_oauth_token_setting() {
+		$options = get_option( 'smrt_twitterapi_settings' );
+		$val = isset( $options['oauth_token'] ) ? $options['oauth_token'] : '';
+		echo '<input type="text" class="regular-text" name="smrt_twitterapi_settings[oauth_token]" value="' . esc_attr( $val ) . '"/>';
+	}
+	
+	/**
+	 * Render OAuth Token Secret settings field
+	 *
+	 * @since 0.1.0
+	 */
+	public function render_oauth_token_secret_setting() {
+		$options = get_option( 'smrt_twitterapi_settings' );
+		$val = isset( $options['oauth_secret'] ) ? $options['oauth_secret'] : '';
+		echo '<input type="text" class="regular-text" name="smrt_twitterapi_settings[oauth_secret]" value="' . esc_attr( $val ) . '"/>';
+	}
+	
+	/**
 	 * Sanitize input on settings form
 	 *
 	 * @since 0.2.8
@@ -968,6 +1139,22 @@ class SMRT_Storyline {
 		
 		if ( isset( $input['master_secret'] ) ) {
 			$valid['master_secret'] = sanitize_text_field( $input['master_secret'] );
+		}
+
+		if ( isset( $input['consumer_key'] ) ) {
+			$valid['consumer_key'] = sanitize_text_field( $input['consumer_key'] );
+		}
+		
+		if ( isset( $input['consumer_secret'] ) ) {
+			$valid['consumer_secret'] = sanitize_text_field( $input['consumer_secret'] );
+		}
+		
+		if ( isset( $input['oauth_token'] ) ) {
+			$valid['oauth_token'] = sanitize_text_field( $input['oauth_token'] );
+		}
+		
+		if ( isset( $input['oauth_secret'] ) ) {
+			$valid['oauth_secret'] = sanitize_text_field( $input['oauth_secret'] );
 		}
 		
 		return $valid;
