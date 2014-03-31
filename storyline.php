@@ -336,7 +336,7 @@ class SMRT_Storyline {
 		// only refactor for storylines
 		if( $post->post_type != 'storyline' )
 			return $content;
-		
+
 		// filter for our embed shortcodes - [pd.youtube url=... width=[300|100%]]
 		$content = preg_replace_callback(
 				'/\[pd\.(?<name>.*?)\s+(?<attributes>.*)\s*\]/i',
@@ -436,7 +436,9 @@ class SMRT_Storyline {
 
 					if( !$embed_id ) return '<!-- vine embed error : invalid id -->';
 
-					$embed_string = 'https://vine.co/v/' . $embed_id . '/embed/simple';
+					$type = ( isset($attributes['type']) && strtolower($attributes['type']) == 'postcard') ? 'postcard' : 'simple';
+
+					$embed_string = 'https://vine.co/v/' . $embed_id . '/embed/' . $type;
 
 				 	break;
 
@@ -508,28 +510,29 @@ class SMRT_Storyline {
 							$twttxt = substr_replace($twttxt, $str, $tm->indices[0], $tm->indices[1] - $tm->indices[0]);
 						}
 
+						// needed to put 'href' on some elements as they are selected by the tap event not the parent 'anchor'
 						$embed_string = sprintf('
 							<div class="embed embed-twitter">
 	                            <div class="profile">
 	                            	<a href="%6$s">
-		                                <img class="profilepic" src="%5$s">
+		                                <img class="profilepic" src="%5$s" href="%6$s">
 		                                <div class="name">
-		                                    <span class="name">%1$s</span>
+		                                    <span class="name" href="%6$s">%1$s</span>
 		                                    <div class="clear"></div>
-		                                    <span class="hand">@%2$s</span>
+		                                    <span class="hand" href="%6$s">@%2$s</span>
 		                                </div>
 	                                </a>
-	                                <a href="%7$s"><img class="twitter-plus" src="resources/images/twitter/twitter-plus.png"></a>
-	                                <a href="%7$s"><img class="twitter" src="resources/images/twitter/twitter.png"></a>
+	                                <a href="%7$s" class="button twitter-plus"></a>
+	                                <a href="%7$s" class="button twitter"></a>
 	                            </div>
 	                            <div class="quote">
 	                                <div class="bg-blue">
 	                                    <div class="blue-box">
 		                                    <p class="tweet-quote">%3$s</p>
 		                                    <span class="date">%4$s</span>
-		                                    <a href="%10$s"><img class="follow" src="resources/images/twitter/follow-btn.png"></a>
-		                                    <a href="%9$s"><img class="loop" src="resources/images/twitter/loop-btn.png"></a>
-		                                    <a href="%8$s"><img class="reply" src="resources/images/twitter/reply-btn.png"></a>
+		                                    <a href="%10$s" class="button follow"></a>
+		                                    <a href="%9$s" class="button loop"></a>
+		                                    <a href="%8$s" class="button reply"></a>
 	                                    </div>
 	                                </div>
 	                            </div>
