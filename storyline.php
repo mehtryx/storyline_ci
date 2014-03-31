@@ -515,11 +515,11 @@ class SMRT_Storyline {
 							<div class="embed embed-twitter">
 	                            <div class="profile">
 	                            	<a href="%6$s">
-		                                <img class="profilepic" src="%5$s" href="%6$s">
-		                                <div class="name">
-		                                    <span class="name" href="%6$s">%1$s</span>
+		                                <img class="profilepic" src="%5$s" data-href="%6$s">
+		                                <div class="name" data-href="%6$s">
+		                                    <span class="name">%1$s</span>
 		                                    <div class="clear"></div>
-		                                    <span class="hand" href="%6$s">@%2$s</span>
+		                                    <span class="hand">@%2$s</span>
 		                                </div>
 	                                </a>
 	                                <a href="%7$s" class="button twitter-plus"></a>
