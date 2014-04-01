@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.4.2
+Version: 0.4.4
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.4.2' );
+define( 'SMRT_STORYLINE_VERSION', '0.4.4' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -496,18 +496,10 @@ class SMRT_Storyline {
 					}
 					else {
 						// retrieve tweet and generate html
-						$tweet = $codebird->statuses_show_ID('id='.$embed_id);
+						$tweet = $codebird->statuses_show_ID( 'id='.$embed_id );
 
 						if( !isset($tweet->text) ) {
 							return '<!-- twitter embed error : could not retrieve tweet -->';
-						}
-
-						// format tweet text
-						$twttxt = $tweet->text;
-
-						foreach($tweet->entities->media as $tm) {
-							$str = sprintf('<a href="%s">%s</a>', esc_attr($tm->url), $tm->display_url);
-							$twttxt = substr_replace($twttxt, $str, $tm->indices[0], $tm->indices[1] - $tm->indices[0]);
 						}
 
 						// needed to put 'href' on some elements as they are selected by the tap event not the parent 'anchor'
@@ -517,9 +509,9 @@ class SMRT_Storyline {
 	                            	<a href="%6$s">
 		                                <img class="profilepic" src="%5$s" data-href="%6$s">
 		                                <div class="name" data-href="%6$s">
-		                                    <span class="name">%1$s</span>
+		                                    <span class="name" data-href="%6$s">%1$s</span>
 		                                    <div class="clear"></div>
-		                                    <span class="hand">@%2$s</span>
+		                                    <span class="hand" data-href="%6$s">@%2$s</span>
 		                                </div>
 	                                </a>
 	                                <a href="%7$s" class="button twitter-plus"></a>
@@ -539,10 +531,10 @@ class SMRT_Storyline {
 	                        </div>',
 	                        $tweet->user->name,
 	                        $tweet->user->screen_name,
-	                        $twttxt,
+	                        SMRT_Storyline::format_tweet_text( $tweet ),
 	                        date( 'j M y', strtotime($tweet->created_at) ),
 	                        esc_attr( $tweet->user->profile_image_url ),
-	                        esc_attr( $tweet->user->url ),
+	                        'https://twitter.com/'. $tweet->user->screen_name,
 	                        'https://twitter.com/'. $tweet->user->screen_name .'?tw_i='. $tweet->id_str,
 	                        'https://twitter.com/intent/tweet?in_reply_to='. $tweet->id_str,
 	                        'https://twitter.com/intent/retweet?tweet_id='. $tweet->id_str,
@@ -564,6 +556,82 @@ class SMRT_Storyline {
 			// return final output
 			return $short_code_replacement;
 		}
+	}
+
+	/**
+	 * Helper to format the text of a tweet replacing #hashes and links
+	 *
+	 * @since 0.4.3
+	 *
+	 * @param object Tweet object
+	 * @return string Formatted tweet text
+	 */
+	public static function format_tweet_text( $tweet ) {
+		// http://blog.jacobemerick.com/web-development/parsing-twitter-feeds-with-php/
+		$hashtag_link_pattern = '<a href="http://twitter.com/search?q=%%23%s&src=hash" rel="nofollow" target="_blank">#%s</a>';
+		$url_link_pattern = '<a href="%s" rel="nofollow" target="_blank" title="%s">%s</a>';
+		$user_mention_link_pattern = '<a href="http://twitter.com/%s" rel="nofollow" target="_blank" title="%s">@%s</a>';
+		$media_link_pattern = '<a href="%s" rel="nofollow" target="_blank" title="%s">%s</a>';
+
+		$text = $tweet->text;
+
+		$entity_holder = array();
+
+		if( isset($tweet->entities->hashtags) ) {
+			foreach($tweet->entities->hashtags as $hashtag) {
+				$entity = new stdclass();
+				$entity->start = $hashtag->indices[0];
+				$entity->end = $hashtag->indices[1];
+				$entity->length = $hashtag->indices[1] - $hashtag->indices[0];
+				$entity->replace = sprintf($hashtag_link_pattern, strtolower($hashtag->text), $hashtag->text);
+
+				$entity_holder[$entity->start] = $entity;
+			}
+		}
+
+		if( isset($tweet->entities->urls) ) {
+			foreach($tweet->entities->urls as $url) {
+				$entity = new stdclass();
+				$entity->start = $url->indices[0];
+				$entity->end = $url->indices[1];
+				$entity->length = $url->indices[1] - $url->indices[0];
+				$entity->replace = sprintf($url_link_pattern, $url->url, $url->expanded_url, $url->display_url);
+
+				$entity_holder[$entity->start] = $entity;
+			}
+		}
+
+		if( isset($tweet->entities->user_mentions) ) {
+			foreach($tweet->entities->user_mentions as $user_mention) {
+				$entity = new stdclass();
+				$entity->start = $user_mention->indices[0];
+				$entity->end = $user_mention->indices[1];
+				$entity->length = $user_mention->indices[1] - $user_mention->indices[0];
+				$entity->replace = sprintf($user_mention_link_pattern, strtolower($user_mention->screen_name), $user_mention->name, $user_mention->screen_name);
+
+				$entity_holder[$entity->start] = $entity;
+			}
+		}
+
+		if( isset($tweet->entities->media) ) {
+			foreach($tweet->entities->media as $media) {
+				$entity = new stdclass();
+				$entity->start = $media->indices[0];
+				$entity->end = $media->indices[1];
+				$entity->length = $media->indices[1] - $media->indices[0];
+				$entity->replace = sprintf($media_link_pattern, $media->url, $media->expanded_url, $media->display_url);
+
+				$entity_holder[$entity->start] = $entity;
+			}
+		}
+
+		krsort($entity_holder);
+
+		foreach($entity_holder as $entity) {
+			$text = substr_replace($text, $entity->replace, $entity->start, $entity->length);
+		} 
+
+		return $text;
 	}
 	
 	/**
