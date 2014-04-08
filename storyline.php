@@ -54,7 +54,7 @@ class SMRT_Storyline {
 	 * @uses add_filter
 	 */
 	public function __construct() {
-		
+
 		// register hooks and filters
 		add_action( 'after_setup_theme', array( $this, 'add_custom_image_sizes' ) );
 		add_action( 'init', array( $this, 'register_storyline' ) );
@@ -568,10 +568,10 @@ class SMRT_Storyline {
 	 */
 	public static function format_tweet_text( $tweet ) {
 		// http://blog.jacobemerick.com/web-development/parsing-twitter-feeds-with-php/
-		$hashtag_link_pattern = '<a href="http://twitter.com/search?q=%%23%s&src=hash" rel="nofollow" target="_blank">#%s</a>';
-		$url_link_pattern = '<a href="%s" rel="nofollow" target="_blank" title="%s">%s</a>';
-		$user_mention_link_pattern = '<a href="http://twitter.com/%s" rel="nofollow" target="_blank" title="%s">@%s</a>';
-		$media_link_pattern = '<a href="%s" rel="nofollow" target="_blank" title="%s">%s</a>';
+		$hashtag_link_pattern = '<a href="http://twitter.com/search?q=%%23%s&src=hash" rel="nofollow">#%s</a>';
+		$url_link_pattern = '<a href="%s" rel="nofollow" title="%s">%s</a>';
+		$user_mention_link_pattern = '<a href="http://twitter.com/%s" rel="nofollow" title="%s">@%s</a>';
+		$media_link_pattern = '<a href="%s" rel="nofollow" title="%s">%s</a>';
 
 		$text = $tweet->text;
 
@@ -681,6 +681,9 @@ class SMRT_Storyline {
 			'update_count_callback' => '_update_post_term_count',
 			'query_var' => true
 		) );
+
+		// this post type supports...
+		add_post_type_support( 'storyline', 'zoninator_zones' );
 	}
 	
 	/**
