@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.4.4
+Version: 0.4.5
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.4.4' );
+define( 'SMRT_STORYLINE_VERSION', '0.4.5' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -71,6 +71,7 @@ class SMRT_Storyline {
 		// register ajax handler for urban airship update
 		add_action( 'wp_ajax_smrt_push_ua_update', array ( $this, 'smrt_push_ua_update_callback' ) );
 		add_action( 'wp_ajax_smrt_alert_check_update', array ( $this, 'smrt_alert_check_update_callback' ) );
+		add_action( 'wp_ajax_smrt_push_ua_breaking', array ( $this, 'smrt_push_ua_breaking_callback' ) );
 		
 		// custom sorting by date and menu_order
 		add_action( 'pre_get_posts', array( $this, 'pre_get_storylines_sort' ) );
@@ -92,7 +93,7 @@ class SMRT_Storyline {
 			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 		}
 	}
-	
+
 	/**
 	 * Adds the custom image sizes used by storyline
 	 *
@@ -1250,10 +1251,12 @@ class SMRT_Storyline {
 			return;
 		
 		// ensure only those who can publish, can see this box
-		if ( current_user_can( 'publish_posts' ) )
+		if ( current_user_can( 'publish_posts' ) ) {
 			add_meta_box( 'update_alert_meta_box', 'Urban Airship Update Alert', array( $this, 'update_alert_meta_box' ), $post_type, 'side', 'low' );
-	}
-		
+			add_meta_box( 'breaking_alert_meta_box', 'Urban Airship Breaking News', array( $this, 'breaking_alert_meta_box' ), $post_type, 'side', 'low' );
+		}
+	}	
+
 	/**
 	 * Generating the update notification meta box
 	 *
@@ -1264,10 +1267,97 @@ class SMRT_Storyline {
 		$updated = (bool) get_post_meta( $post->ID, '_smrt_update_alert_sent' , true );
 		?>
 			<p id="update-status"></p>
-			<input name="submit_update" type="submit" value="Push Update" onClick="smrt_storyline_alerts_send_update(event);"/>
-			<br />
-			<input id="check-update" type="checkbox" <?php checked( $updated ) ?> onChange="smrt_storyline_alerts_check_update(event);" /> Updated
+			<input name="submit_update" type="submit" value="Push Update Alert" onClick="smrt_storyline_alerts_send_update(event);"/>
+			<p>
+				<input id="check-update" type="checkbox" <?php checked( $updated ) ?> onChange="smrt_storyline_alerts_check_update(event);" /> Updated
+			</p>
 		<?php
+	}	
+
+	/**
+	 * Generating the breaking news notification meta box
+	 *
+	 * @since 0.4.5
+	 */
+	function breaking_alert_meta_box(){
+		?>
+			<p id="breaking-status"></p>
+			<input name="submit_breaking" type="submit" value="Push Breaking News Alert" onClick="if(confirm('Are you sure you want to send a Breaking News Alert for this story to everyone?')) { smrt_storyline_alerts_send_breaking(event); } return false;"/>
+		<?php
+	}
+	
+	/**
+	 * Ajax function to send push notification to Urban Airship
+	 *
+	 * @since 0.4.5
+	 *
+	 * @uses current_user_can
+	 * @uses get_option
+	 * @uses sanitize_text_field
+	 * @uses apply_filters
+	 * @uses wp_remote_post
+	 * @uses us_wp_error
+	 * @uses wp_die
+	 */
+	public function smrt_push_ua_breaking_callback() {
+		// check nonce
+		$nonce = 0;
+		$result = '';
+		
+		if ( isset( $_POST['nonce'] ) ) {
+			if ( wp_verify_nonce( $_POST['nonce'], 'smrt_storyline_ajax_nonce' ) )
+				$nonce = wp_create_nonce( 'smrt_storyline_ajax_nonce' );
+		}
+		
+		if ( current_user_can( 'publish_posts' ) && $nonce ) {
+			$postID = intval( urldecode( $_POST['postID'] ) );
+			$post = get_post( $postID );
+
+			if ( $post ) { 	
+				$options = get_option( 'smrt_storyline_settings' );
+				$auth_combo = sanitize_text_field( $options['app_id'] ) . ':' . sanitize_text_field( $options['master_secret'] );
+				
+				// build push body as per v3 of Urban Airship push API 
+				// http://docs.urbanairship.com/reference/api/v3/push.html#push-object
+				$contents = array();
+				$contents['alert'] = 'Breaking News - ' . $post->post_title;
+				$extra = array('extra' => array( 'url' => strval( $postID ) ) );
+				$contents['ios'] = $extra;
+				$contents['android'] = $extra;
+				
+				$push = array( 'audience' => 'all', 'notification' => $contents, 'device_types' => 'all' );
+				
+				// allow external modification of push data if required ever.
+				$push = apply_filters( 'smrt_storyline_breaking_push', $push );
+				
+				$json = json_encode ( $push );
+				$args = array(
+					'headers' => array( 
+						'Content-Type' => 'application/json',
+						'Accept' => 'application/vnd.urbanairship+json; version=3;',
+						'Authorization' => 'Basic ' . base64_encode( $auth_combo ) ),
+					'body' => $json
+				);
+				
+				// Send the push
+				$response = wp_remote_post( 'https://go.urbanairship.com/api/push', $args );
+				
+				if( is_wp_error( $response ) ) {
+					// typically this is the result of incorrect or missing app_id and master_secret
+					$error_message = $response->get_error_message();
+				 	$result = 'Error: ' . $error_message;
+				} else {
+					update_post_meta( $postID, '_smrt_breaking_alert_sent', true );
+					$result = $response['response']['code'];
+				}
+			}
+			else {
+				$result = 'Invalid Post, no ID or Title found';
+			}
+		}
+		$response = array( 'nonce' => $nonce, 'result' => $result );
+		echo json_encode( $response );
+		wp_die();
 	}
 	
 	/**
@@ -1347,6 +1437,7 @@ class SMRT_Storyline {
 		echo json_encode( $response );
 		wp_die();
 	}
+
 	function smrt_alert_check_update_callback() {
 		// check nonce
 		$nonce = 0;

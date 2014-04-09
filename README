@@ -1,7 +1,7 @@
 === storyline ===
 Contributors: Edward de Groot, Donnie Marges, Waheed Ashraf, Keith Benedict, Goldwin Guenther, Chris Murphy
 Tested up to: 3.9-beta1-27501
-Stable tag: 0.4.4
+Stable tag: 0.4.5
 License: MIT
 License URI: https://github.com/Postmedia/storyline/blob/master/LICENSE
 
@@ -62,6 +62,9 @@ Load VIP shared plugin library
 
 
 == Changelog ==
+
+= 0.4.5 =
+* Added button to Storyline post to send Breaking News alerts through Urban Airship v3 to everyone (broadcast).
 
 = 0.4.4 = 
 * Added helper function for formatting twitter tweet text
