@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.4.5
+Version: 0.4.6
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.4.5' );
+define( 'SMRT_STORYLINE_VERSION', '0.4.6' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -684,7 +684,8 @@ class SMRT_Storyline {
 		) );
 
 		// this post type supports...
-		add_post_type_support( 'storyline', 'zoninator_zones' );
+		// breaking news alert button now in storyline post
+		//add_post_type_support( 'storyline', 'zoninator_zones' );
 	}
 	
 	/**
