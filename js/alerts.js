@@ -1,5 +1,30 @@
+function smrt_storyline_alerts_send_breaking(e) {
+	e.preventDefault();
+	jQuery('#breaking-status').text('sending...');
+	jQuery.ajax({
+		url: ajaxurl,
+		type: 'POST',
+		data: {
+			action: 'smrt_push_ua_breaking',
+			nonce: smrt_alerts.nonce,
+			postID: smrt_alerts.postID
+		}
+	}).success(function(json) {
+		console.log(json);
+		response = JSON.parse(json);
+		smrt_alerts.nonce = response['nonce'];
+		
+		if(response['result'] == '202') {
+			jQuery('#breaking-status').text('Sent!').css('color', 'green');
+		} else {
+			jQuery('#breaking-status').text('Oops! There was a problem!').css('color', 'red');
+		}	
+	});
+}
+
 function smrt_storyline_alerts_send_update(e) {
 	e.preventDefault();
+	jQuery('#update-status').text('sending...');
 	jQuery.ajax({
 		url: ajaxurl,
 		type: 'POST',
@@ -13,7 +38,7 @@ function smrt_storyline_alerts_send_update(e) {
 		response = JSON.parse(json);
 		smrt_alerts.nonce = response['nonce'];
 		
-		if(response['result'] === 202) {
+		if(response['result'] == '202') {
 			jQuery('#update-status').text('Sent!').css('color', 'green');
 			jQuery('#check-update').prop('checked', true);
 		} else {
@@ -36,7 +61,7 @@ function smrt_storyline_alerts_check_update(e) {
 		response = JSON.parse(json);
 		smrt_alerts.nonce = response['nonce'];
 		
-		if(response['result'] === 'true') {
+		if(response['result'] == 'true') {
 			jQuery('#check-update').prop('checked', true);
 		} else {
 			jQuery('#check-update').prop('checked', false);

@@ -1320,7 +1320,7 @@ class SMRT_Storyline {
 				// build push body as per v3 of Urban Airship push API 
 				// http://docs.urbanairship.com/reference/api/v3/push.html#push-object
 				$contents = array();
-				$contents['alert'] = 'Breaking News - ' . $post->post_title;
+				$contents['alert'] = $post->post_title;
 				$extra = array('extra' => array( 'url' => strval( $postID ) ) );
 				$contents['ios'] = $extra;
 				$contents['android'] = $extra;
@@ -1394,7 +1394,7 @@ class SMRT_Storyline {
 				// build push body as per v3 of Urban Airship push API 
 				// http://docs.urbanairship.com/reference/api/v3/push.html#push-object
 				$contents = array();
-				$contents['alert'] = 'Updated story - ' . $post->post_title;
+				$contents['alert'] = $post->post_title;
 				$contents['extra'] = array( 'url' => strval( $postID ) );
 				$notification = array();
 				$notification['ios'] = $contents;
