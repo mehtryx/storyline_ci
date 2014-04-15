@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.4.6
+Version: 0.4.7
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.4.6' );
+define( 'SMRT_STORYLINE_VERSION', '0.4.7' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -475,7 +475,7 @@ class SMRT_Storyline {
 					}
 
 					// load settings options
-					$options = get_option( 'smrt_twitterapi_settings' );
+					$options = get_option( 'smrt_storyline_settings' );
 
 					if( !isset($options['consumer_key']) || !isset($options['consumer_secret']) || !isset($options['oauth_token']) || !isset($options['oauth_secret']) ) {
 						return '<!-- twitter embed error : settings > storyline > twitter settings not set -->';
@@ -1050,8 +1050,6 @@ class SMRT_Storyline {
 		add_settings_field( 'smrt_ua_master_secret', 'Master Secret', array( $this, 'render_master_secret_setting') , 'storyline-settings', 'smrt_storyline_main' );
 	
 		// TWITTER
-		register_setting( 'smrt_twitterapi_settings', 'smrt_twitterapi_settings', array( $this, 'sanitize_settings' ) );
-		
 		add_settings_section( 'smrt_twitterapi_main', 'TwitterAPI Plugin Settings', array( $this, 'settings_twitter_help' ), 'twitterapi-settings' );
 		
 		add_settings_field( 'smrt_twitterapi_consumer_key', 'API Key', array( $this, 'render_consumer_key_setting'), 'twitterapi-settings', 'smrt_twitterapi_main' );
@@ -1100,9 +1098,9 @@ class SMRT_Storyline {
 			<form action="options.php" method="post">
 				<?php
 				settings_fields( 'smrt_storyline_settings' );
+
 				do_settings_sections( 'storyline-settings' );
-				
-				settings_fields( 'smrt_twitterapi_settings' );
+
 				do_settings_sections( 'twitterapi-settings' );
 				?>
 				<input name="submit" type="submit" value="Save Changes" />
@@ -1161,9 +1159,9 @@ class SMRT_Storyline {
 	 * @since 0.1.0
 	 */
 	public function render_consumer_key_setting() {
-		$options = get_option( 'smrt_twitterapi_settings' );
+		$options = get_option( 'smrt_storyline_settings' );
 		$val = isset( $options['consumer_key'] ) ? $options['consumer_key'] : '';
-		echo '<input type="text" class="regular-text" name="smrt_twitterapi_settings[consumer_key]" value="' . esc_attr( $val ) . '"/>';
+		echo '<input id="smrt_twitterapi_consumer_key" type="text" class="regular-text" name="smrt_storyline_settings[consumer_key]" value="' . esc_attr( $val ) . '"/>';
 	}
 	
 	/**
@@ -1172,9 +1170,9 @@ class SMRT_Storyline {
 	 * @since 0.1.0
 	 */
 	public function render_consumer_secret_setting() {
-		$options = get_option( 'smrt_twitterapi_settings' );
+		$options = get_option( 'smrt_storyline_settings' );
 		$val = isset( $options['consumer_secret'] ) ? $options['consumer_secret'] : '';
-		echo '<input type="text" class="regular-text" name="smrt_twitterapi_settings[consumer_secret]" value="' . esc_attr( $val ) . '"/>';
+		echo '<input id="smrt_twitterapi_consumer_secret" type="text" class="regular-text" name="smrt_storyline_settings[consumer_secret]" value="' . esc_attr( $val ) . '"/>';
 	}
 	
 	/**
@@ -1183,9 +1181,9 @@ class SMRT_Storyline {
 	 * @since 0.1.0
 	 */
 	public function render_oauth_token_setting() {
-		$options = get_option( 'smrt_twitterapi_settings' );
+		$options = get_option( 'smrt_storyline_settings' );
 		$val = isset( $options['oauth_token'] ) ? $options['oauth_token'] : '';
-		echo '<input type="text" class="regular-text" name="smrt_twitterapi_settings[oauth_token]" value="' . esc_attr( $val ) . '"/>';
+		echo '<input id="smrt_twitterapi_oauth_token" type="text" class="regular-text" name="smrt_storyline_settings[oauth_token]" value="' . esc_attr( $val ) . '"/>';
 	}
 	
 	/**
@@ -1194,9 +1192,9 @@ class SMRT_Storyline {
 	 * @since 0.1.0
 	 */
 	public function render_oauth_token_secret_setting() {
-		$options = get_option( 'smrt_twitterapi_settings' );
+		$options = get_option( 'smrt_storyline_settings' );
 		$val = isset( $options['oauth_secret'] ) ? $options['oauth_secret'] : '';
-		echo '<input type="text" class="regular-text" name="smrt_twitterapi_settings[oauth_secret]" value="' . esc_attr( $val ) . '"/>';
+		echo '<input id="smrt_twitterapi_oauth_secret" type="text" class="regular-text" name="smrt_storyline_settings[oauth_secret]" value="' . esc_attr( $val ) . '"/>';
 	}
 	
 	/**
@@ -1209,6 +1207,7 @@ class SMRT_Storyline {
 	function sanitize_settings( $input ) {
 		$valid = array();
 		
+		// Urban Airship
 		if ( isset( $input['app_id'] ) ) {
 			$valid['app_id'] = sanitize_text_field( $input['app_id'] );
 		}
@@ -1217,6 +1216,7 @@ class SMRT_Storyline {
 			$valid['master_secret'] = sanitize_text_field( $input['master_secret'] );
 		}
 
+		// Twitter API (codebird)
 		if ( isset( $input['consumer_key'] ) ) {
 			$valid['consumer_key'] = sanitize_text_field( $input['consumer_key'] );
 		}
