@@ -254,6 +254,24 @@ body { background-color: #ffffff; }
 	height: 52px;
 
 }
+
+article blockquote:before {
+	content: "";
+	width: 0;
+	height: 0;
+}
+article blockquote {
+	padding: 0;
+	font-family:"Shift";
+	margin: 0;
+}
+article.l-article blockquote p {
+	font-size: 0.78em;
+	font-style: italic;
+	line-height: 1.37em;
+	font-family: "Shift";
+}
+
 #nav_icon {
 	/*background-image: url('../images/logo.png');*/
 }
