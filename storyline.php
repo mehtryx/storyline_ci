@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.4.7
+Version: 0.4.8
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.4.7' );
+define( 'SMRT_STORYLINE_VERSION', '0.4.8' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -753,14 +753,12 @@ class SMRT_Storyline {
 		}
 		
 		echo "<div class='smart-device-preview'>
-					<div class='select-device'> 
-						<label for='phoneselector'>Select a device</label><br>
-						<select name='phoneselector' id='phoneselector'>
-						</select>
+					<div class='x-align-center'> 
+						<h1>iPhone 4 simulator</h1>
 					</div>
 					<div class='device-wrapper'>
 						<div class='viewport-wrapper' >
-							" . $hardcoded_header . "
+							" . $hardcoded_header . $hardcoded_adbanner . "
 							<div class='swiper-container'>
 								<div class='swiper-wrapper'>
 									<div class='swiper-slide'>
@@ -772,8 +770,8 @@ class SMRT_Storyline {
 													<div class='timestamp'><span class='updated'>Updated: </span><span>11:40 AM</span></div>
 													<div class='story_abstract'>" .	$slides[0] . "</div>
 												</div>
-												<div class='adBannerPagination'><div class='statusbar'>1/" . ( count( $slides ) ) . "</div>" . $hardcoded_adbanner .
-											"</div></div>
+												<div class='statusbar'>1/" . ( count( $slides ) ) . "
+											</div></div>
 										</div>
 									</div>"
 									. $this->render_content_slides( $slides ) .
