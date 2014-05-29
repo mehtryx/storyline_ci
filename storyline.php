@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.4.8
+Version: 0.4.9
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -481,11 +481,6 @@ class SMRT_Storyline {
 						return '<!-- twitter embed error : settings > storyline > twitter settings not set -->';
 					}
 
-					// set codebird consumer key/secret
-					\Codebird\Codebird::setConsumerKey($options['consumer_key'], $options['consumer_secret']);
-					$codebird = WP_Codebird::getInstance();
-					$codebird->setToken($options['oauth_token'], $options['oauth_secret']);
-
 					$embed_type = 'html';
 					
 					if( $url ) {
@@ -496,8 +491,24 @@ class SMRT_Storyline {
 						return '<!-- twitter embed error : invalid id -->';
 					}
 					else {
-						// retrieve tweet and generate html
-						$tweet = $codebird->statuses_show_ID( 'id='.$embed_id );
+						// need to cache twitter data as we are seeing rate limiting issues
+						$cache_key = 'storyline-codebird-statusesshowid-' . $embed_id;
+						
+						// check cache for tweet
+						$tweet = wp_cache_get( $cache_key );
+
+						if( $tweet === false ) {
+							// set codebird consumer key/secret
+							\Codebird\Codebird::setConsumerKey($options['consumer_key'], $options['consumer_secret']);
+							$codebird = WP_Codebird::getInstance();
+							$codebird->setToken($options['oauth_token'], $options['oauth_secret']);
+
+							// retrieve tweet and generate html
+							$tweet = $codebird->statuses_show_ID( 'id='.$embed_id );
+
+							// cache tweet
+							wp_cache_set( $cache_key, $tweet );
+						}
 
 						if( !isset($tweet->text) ) {
 							return '<!-- twitter embed error : could not retrieve tweet -->';
