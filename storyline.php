@@ -495,7 +495,7 @@ class SMRT_Storyline {
 						$cache_key = 'storyline-codebird-statusesshowid-' . $embed_id;
 						
 						// check cache for tweet
-						$tweet = wp_cache_get( $cache_key );
+						$tweet = get_transient( $cache_key );
 
 						if( $tweet === false ) {
 							// set codebird consumer key/secret
@@ -506,8 +506,8 @@ class SMRT_Storyline {
 							// retrieve tweet and generate html
 							$tweet = $codebird->statuses_show_ID( 'id='.$embed_id );
 
-							// cache tweet
-							wp_cache_set( $cache_key, $tweet );
+							// cache tweet 5 minutes
+							set_transient( $cache_key, $tweet, 300 );
 						}
 
 						if( !isset($tweet->text) ) {
