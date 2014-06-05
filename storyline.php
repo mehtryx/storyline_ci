@@ -424,6 +424,9 @@ class SMRT_Storyline {
 						$embed_id = substr( $url, strrpos( $url, '/', -1 ) + 1 );
 					}
 
+					// video is 16:9 - adjust height
+					$height = intval(($width / 16 ) * 9);
+
 					if( !$embed_id ) return '<!-- kaltura embed error : invalid id -->';
 
 					$embed_string = 'http://cdnapi.kaltura.com/html5/html5lib/v2.8.2/mwEmbedFrame.php/p/1698541/uiconf_id/22793731/entry_id/' . $embed_id . '?wid=_1698541&iframeembed=true';
