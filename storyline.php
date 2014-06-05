@@ -419,6 +419,17 @@ class SMRT_Storyline {
 
 					break;
 
+				case 'kaltura':
+					if( $url ) {
+						$embed_id = substr( $url, strrpos( $url, '/', -1 ) + 1 );
+					}
+
+					if( !$embed_id ) return '<!-- kaltura embed error : invalid id -->';
+
+					$embed_string = 'http://cdnapi.kaltura.com/html5/html5lib/v2.8.2/mwEmbedFrame.php/p/1698541/uiconf_id/22793731/entry_id/0_7v2rllzr?wid=_1698541&iframeembed=true&flashvars%5Bvast.prerollUrl%5D=http%3A%2F%2Fpubads.g.doubleclick.net%2Fgampad%2Fads%3Fimpl%3Ds%26gdfp_req%3D1%26env%3Dvp%26output%3Dxml_vast2%26unviewed_position_start%3D1%26url%3Dhttp%253A%252F%252Fcdnapi.kaltura.com%252Fhtml5%252Fhtml5lib%252Fv2.8.2%252FmwEmbedFrame.php%252Fp%252F1698541%252Fuiconf_id%252F22793731%252Fentry_id%252F0_7v2rllzr%253Fwid%253D_1698541%2526iframeembed%253Dtrue%26iu%3D%252F3081%252Ftest.aroid%252Fnews%252Fstory%26sz%3D320x240%26ciu_szs%3D320x240%26pr%3Dvs%26ck%3Dnews%26correlator%3D7734321592656115713%26extras%3Dpage%253Dstory%2526cnt%253Dnews%2526ord%253D7732176592656115713';
+				 	
+				 	break;
+
 				case 'soundcloud':
 					if( $url ) {
 						$embed_id = substr( $url, strrpos( $url, '/', -1 ) + 1 );
