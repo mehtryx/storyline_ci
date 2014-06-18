@@ -419,6 +419,24 @@ class SMRT_Storyline {
 
 					break;
 
+				// test tag for redfrog / kaltura embed testing
+				case 'redfrog':
+					if( $url ) {
+						$embed_id = substr( $url, strrpos( $url, '/', -1 ) + 1 );
+					}
+
+					// optional playlist param
+					$playlist = ( isset($attributes['playlist']) ) ? '?p=' . $attributes['playlist'] : '';
+
+					// video is 16:9 - adjust height
+					$height = intval(($width / 16 ) * 9);
+
+					if( !$embed_id ) return '<!-- redfrog embed error : invalid id -->';
+
+					$embed_string = 'http://redfrogconsulting.com/DEMOS/iframe/' . $embed_id . '/' . $playlist;
+				 	
+				 	break;
+
 				case 'kaltura':
 					if( $url ) {
 						$embed_id = substr( $url, strrpos( $url, '/', -1 ) + 1 );
