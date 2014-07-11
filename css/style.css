@@ -278,6 +278,10 @@ article.l-article blockquote p {
 	font-family: "Shift";
 }
 
+article .story_item_2 blockquote p {
+	padding: 12px 35px 0 35px;
+}
+
 #nav_icon {
 	/*background-image: url('../images/logo.png');*/
 }
