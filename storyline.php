@@ -1348,7 +1348,7 @@ class SMRT_Storyline {
 	}	
 	
 	/**
-	 * Display the Urban Airship update notification interface in Edit Post screen
+	 * Saves no_thumnail status on post update
 	 *
 	 * @since 0.5.1
 	 *
@@ -1357,24 +1357,22 @@ class SMRT_Storyline {
 	 * @uses delete_post_meta
 	 * @uses wp_verify_nonce
 	 */
-	public function save_post($postID) {
-			
-			global $post;
-			if (current_user_can('edit_post', $postID)){
-				//pr0int_r($_POST);
-				if (wp_verify_nonce($_POST['no_thumbnail_nonce'], 'save')){
-					if (isset($_POST['no_thumbnail'])) {
-						update_post_meta( $postID, 'no_thumbnail', true );
-					}
-					else
-					{
-						delete_post_meta( $postID, 'no_thumbnail');
-					}
+	public function save_post( $postID ) {
+		global $post;
+		if ( current_user_can( 'edit_post' , $postID ) ){
+			if ( wp_verify_nonce( $_POST['no_thumbnail_nonce'], 'save') ){
+				if ( isset( $_POST['no_thumbnail'] ) ) {
+					update_post_meta( $postID, 'no_thumbnail', true );
 				}
-				return;
+				else
+				{
+					delete_post_meta( $postID, 'no_thumbnail');
+				}
 			}
-			
+			return;
 		}
+		
+	}
 	/**
 	 * Ajax function to send push notification to Urban Airship
 	 *
