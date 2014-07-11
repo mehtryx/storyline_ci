@@ -65,6 +65,7 @@ Load VIP shared plugin library
 
 = 0.5.1 =
 * Update twitter hidden control character filter
+* Add shortcode tag for Red Frog (Kaltura) player
 
 = 0.5.0 =
 * Added shortcode support for kaltura video. 
