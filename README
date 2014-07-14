@@ -1,7 +1,7 @@
 === storyline ===
 Contributors: Edward de Groot, Donnie Marges, Waheed Ashraf, Keith Benedict, Goldwin Guenther, Chris Murphy
 Tested up to: 3.9-beta1-27501
-Stable tag: 0.5.0
+Stable tag: 0.5.1
 License: MIT
 License URI: https://github.com/Postmedia/storyline/blob/master/LICENSE
 
@@ -65,6 +65,8 @@ Load VIP shared plugin library
 
 = 0.5.1 =
 * Added No Thumbail checkbox to storyline post edit
+* Update twitter hidden control character filter
+* Add shortcode tag for Red Frog (Kaltura) player
 
 = 0.5.0 =
 * Added shortcode support for kaltura video. 
