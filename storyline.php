@@ -59,6 +59,8 @@ class SMRT_Storyline {
 		add_action( 'after_setup_theme', array( $this, 'add_custom_image_sizes' ) );
 		add_action( 'init', array( $this, 'register_storyline' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_alerts_meta_box' ) );
+		add_action( 'add_meta_boxes', array( $this, 'add_no_thumb_box' ) );
+		add_action( 'save_post', array( $this, 'save_post'));
 		add_filter( 'the_content', array( $this, 'refactor_images' ), 99 ); 
 		add_filter( 'the_content', array( $this, 'add_storyline_id' ), 99 ); 
 		add_filter( 'the_content', array( $this, 'process_pd_shortcodes' ), 99 ); 
@@ -1301,6 +1303,24 @@ class SMRT_Storyline {
 	}	
 
 	/**
+	 * Display the Urban Airship update notification interface in Edit Post screen
+	 *
+	 * @since 0.5.1
+	 *
+	 * @uses current_user_can
+	 * @uses add_meta_box
+	 */
+	function add_no_thumb_box( $post_type ) {
+		global $post;
+		
+		// Exit if not a storyline post, or not published yet
+		if ( 'storyline' !== $post_type)
+			return;
+		if ( current_user_can( 'publish_posts' ) ) {
+			add_meta_box( 'no_thumbnail_checkbox', 'No Thumbnail', array( $this, 'no_thumbnail_checkbox' ), $post_type, 'side', 'low' );
+		}
+	}	
+	/**
 	 * Generating the update notification meta box
 	 *
 	 * @since 0.2.8
@@ -1328,7 +1348,49 @@ class SMRT_Storyline {
 			<input name="submit_breaking" type="submit" value="Push Breaking News Alert" onClick="if(confirm('Are you sure you want to send a Breaking News Alert for this story to everyone?')) { smrt_storyline_alerts_send_breaking(event); } return false;"/>
 		<?php
 	}
+	/**
+	 * Generating the No Thumbnail checkbox
+	 *
+	 * @since 0.5.1
+	 */
+	function no_thumbnail_checkbox(){
+		global $post;
+		$updated = (bool) get_post_meta( $post->ID, 'no_thumbnail' , false );
+		wp_nonce_field('save', 'no_thumbnail_nonce');
+		?>
+			<p id="no-thumbnail"></p>
+			<p>
+				<input name="no_thumbnail" type="checkbox" value="1" <?php checked( $updated ) ?>/> No Thumbnail
+			</p>
+		<?php
+	}	
 	
+	/**
+	 * Saves no_thumnail status on post update
+	 *
+	 * @since 0.5.1
+	 *
+	 * @uses current_user_can
+	 * @uses update_post_meta
+	 * @uses delete_post_meta
+	 * @uses wp_verify_nonce
+	 */
+	public function save_post( $postID ) {
+		global $post;
+		if ( current_user_can( 'edit_post' , $postID ) ){
+			if ( wp_verify_nonce( $_POST['no_thumbnail_nonce'], 'save') ){
+				if ( isset( $_POST['no_thumbnail'] ) ) {
+					update_post_meta( $postID, 'no_thumbnail', true );
+				}
+				else
+				{
+					delete_post_meta( $postID, 'no_thumbnail');
+				}
+			}
+			return;
+		}
+		
+	}
 	/**
 	 * Ajax function to send push notification to Urban Airship
 	 *
