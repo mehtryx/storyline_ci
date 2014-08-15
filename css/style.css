@@ -219,6 +219,7 @@ body { background-color: #ffffff; }
 	max-height: 100%;
 	background-position: center;
 	background-size: cover;
+	height: 280px;
 }
 .statusbar {
 	font-family: 'NHaasGrotesk';
@@ -262,7 +263,11 @@ body { background-color: #ffffff; }
 }
 
 article blockquote:before {
-	content: "";
+	/*content: "";*/
+	color: #9cc;
+	font: 100px/100px "TitlingGothicFBCond-Standard", Arial, Helvetica, sans-serif;
+	padding-left: 10px;
+	padding-right: 10px;
 	width: 0;
 	height: 0;
 }
@@ -272,10 +277,18 @@ article blockquote {
 	margin: 0;
 }
 article.l-article blockquote p {
+	width: 306px;
+	padding-top: 20px;
+	padding-left: 27px;
+	padding-right: 26px;
 	font-size: 0.78em;
 	font-style: italic;
 	line-height: 1.35em;
 	font-family: "Shift";
+}
+
+article .story_item_2 blockquote p {
+	padding: 12px 35px 0 35px;
 }
 
 #nav_icon {
