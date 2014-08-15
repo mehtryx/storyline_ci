@@ -86,7 +86,19 @@ class SMRT_Storyline {
 		if ( is_admin() ) {
 			add_filter( 'manage_storyline_posts_columns', array( $this, 'add_order_column') );
 			add_action( 'manage_storyline_posts_custom_column' , array( $this, 'custom_columns' ), 10, 2 );
-		}
+        }
+
+        // adds topic ordering column
+        if( is_admin() ) {
+            add_filter( 'manage_edit-smrt-topic_columns', array( $this, 'add_term_order_column' ) );
+            add_filter( 'manage_edit-smrt-topic_sortable_columns', array( $this, 'make_topic_order_column_sortable' ) );
+            add_filter( 'manage_smrt-topic_custom_column', array( $this, 'topic_order_custom_columns' ), 10, 3 );
+            add_action( 'smrt-topic_edit_form_fields', array( $this, 'topic_order_edit_field' ) );
+            add_action( 'edited_smrt-topic', array( $this, 'save_topic_order' ), 10, 1 );
+            add_action( 'quick_edit_custom_box', array( $this, 'topic_order_quick_edit_field' ), 10, 3 );
+            //add_action( 'smrt-topic_add_form_fields', array( $this, 'topic_order_edit_field' ) );
+            //add_action( 'created_smrt-topic', array( $this, 'save_topic_order' ), 13, 1 );
+        }
 		
 		// Add admin hooks for urban airship settings
 		if ( is_admin() ) {
@@ -1022,7 +1034,142 @@ class SMRT_Storyline {
 			echo $post->menu_order;
 		}
 	}	
-	
+
+	/**
+	 * Adds Order column to Topics taxonomy screen
+	 *
+	 * @since 0.3.9
+	 *
+	 */
+    public function add_term_order_column( $columns ) {
+        return array_merge( $columns, array( 'term_group' => __( 'Order' ) ) );
+    }
+
+	/**
+	 * Displays term group in the Order column in the Topics taxonomy screen
+	 *
+	 * @since 0.3.9
+	 * @uses get_term()
+	 *
+	 */
+    public function topic_order_custom_columns( $c, $column_name, $term_id ) {
+        if( 'term_group' === $column_name ) {
+            $term = get_term( $term_id, 'smrt-topic' );
+            echo $term->term_group;
+        }
+    }
+
+	/**
+	 * Adds Edit Order field to Topics term edit screen
+	 *
+	 * @since 0.3.9
+	 *
+	 */
+    public function topic_order_edit_field( $tag ) {
+        $term_id = $tag->term_id;
+        $term_order = $tag->term_group;
+        ?>
+        <tr class="form-field">
+            <th scope="row" valign="top"><label for="term_group"><?php _e( 'Order' ); ?></label></th>
+                <td>
+                    <input type="text" name="term_group" id="term_group" size="3" style="width:60%;" value="<?php echo $term_order; ?>"><br />
+                    <span class="description"><?php _e('Order in which the topic should appear.'); ?></span>
+               </td>
+        </tr>
+        <?php
+    }
+
+	/**
+	 * Saves term_group of a term to use for ordering terms
+	 *
+	 * @since 0.3.9
+	 * @uses remove_action()
+	 * @uses get_terms()
+	 * @uses get_term_by()
+	 * @uses wp_update_term()
+	 * @uses add_action()
+	 *
+	 */
+    public function save_topic_order( $term_id ) {
+		remove_action('edited_smrt-topic', array ( $this, 'save_topic_order' ), 10);
+
+        if ( isset( $_POST[ 'term_group' ] ) ) {
+        	$terms = get_terms( 'smrt-topic', array( 'hide_empty' => 0 ) );
+        	$term_to_edit = get_term_by( 'id', $term_id, 'smrt-topic' );
+
+        	if ( $this->order_num_exists( $terms, $_POST[ 'term_group' ] ) || 0 == $term_to_edit->term_group) {
+				
+				$new_order_num = $this->find_next_available_order_number( $terms );
+
+        		$output = wp_update_term( $term_id, 'smrt-topic', array( 'term_group' => $new_order_num ) );
+        		
+        	} else {
+
+        		$output = wp_update_term( $term_id, 'smrt-topic', array( 'term_group' => $_POST[ 'term_group' ] ) );
+        	}
+        }
+
+        add_action( 'edited_smrt-topic', array( $this, 'save_topic_order' ), 10, 1 );
+    }
+
+	/**
+	 * Renders Order edit field in quick edit form
+	 *
+	 * @since 0.3.9
+	 *
+	 */
+    public function topic_order_quick_edit_field( $column, $screen, $taxonomy ) {
+         ?>
+            <fieldset>
+                <div id="quick-edit-term_group" class="inline-edit-col">
+                    <label>
+                        <span class="title"><?php _e( 'Order' ); ?></span>
+                        <span class="input-text-wrap"><input type="text" name="<?php echo $column; ?>" class="ptitle" value=""></span>
+                    </label>
+                </div>
+            </fieldset>
+        <?php 
+    }
+
+	/**
+	 * Makes Order column in Topics taxonomy screen sortable
+	 *
+	 * @since 0.3.9
+	 *
+	 */
+    public function make_topic_order_column_sortable( $columns ) {
+        $columns[ 'term_group' ] = 'term_group';
+
+        return $columns;
+    }
+
+	/**
+	 * Checks if the ordering priority number is already in use. Returns true if it is, false if it isn't.
+	 *
+	 * @since 0.3.9
+	 *
+	 */
+    public function order_num_exists( $terms, $order_num ) {
+    	foreach ( $terms as $term ) {
+    		if ( $order_num === ( int )$term->term_group ) {
+
+    			return true;
+    		}
+    	}
+
+    	return false;
+    }
+
+	/**
+	 * Returns the number of Topics to use as a default order priority
+	 *
+	 * @since 0.3.9
+	 *
+	 */
+    public function find_next_available_order_number( $terms ) {
+    	return count( $terms ) + 1;
+    }
+
 	/**
 	 * AJAX hook to return list of topics as JSON
 	 *
@@ -1123,7 +1270,12 @@ class SMRT_Storyline {
 			$nonce = wp_create_nonce( 'smrt_storyline_ajax_nonce' );
 			$params = array( 'nonce' => $nonce, 'postID' => $post->ID );
 			wp_localize_script( 'smrt-storyline-ua-alerts', 'smrt_alerts', $params );
-		}
+        }
+
+        if ( 'edit-tags.php' === $pagenow && ( isset( $_GET[ 'taxonomy' ] ) ) && 'smrt-topic' === $_GET[ 'taxonomy' ] && !isset( $_GET[ 'action' ] ) ) {
+            wp_register_script('quick-edit-js', plugins_url( 'js/quick-edit.js', __FILE__ ), array( 'jquery' ) );
+            wp_enqueue_script( 'quick-edit-js' );
+        }
 	}
 	
 	/**
