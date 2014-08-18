@@ -1,7 +1,7 @@
 === storyline ===
 Contributors: Edward de Groot, Donnie Marges, Waheed Ashraf, Keith Benedict, Goldwin Guenther, Chris Murphy
 Tested up to: 3.9-beta1-27501
-Stable tag: 0.4.7
+Stable tag: 0.5.1
 License: MIT
 License URI: https://github.com/Postmedia/storyline/blob/master/LICENSE
 
@@ -63,11 +63,26 @@ Load VIP shared plugin library
 
 == Changelog ==
 
+= 0.5.1 =
+* Added No Thumbail checkbox to storyline post edit
+* Update twitter hidden control character filter
+* Add shortcode tag for Red Frog (Kaltura) player
+
+= 0.5.0 =
+* Added shortcode support for kaltura video. 
+* Strip hidden/control characters from tweet after processing.
+
+= 0.4.9 =
+* Cache twitter data from codebird calls. Rate limiting affecting response.
+
+= 0.4.8 =
+* Updated Storyline web preview. Preview should closely represent how the iPhone4 looks.
+
 = 0.4.7 =
 * Update Storyline Settings. Combine Twitter & Urban Airship settings under the same settings option.
 
 = 0.4.6 = 
-* Remove zoninator support. Button now available in Storyline post so send broadcast alert.
+* Remove zoninator support. Button now available in Storyline post to send broadcast alert.
 
 = 0.4.5 =
 * Added button to Storyline post to send Breaking News alerts through Urban Airship v3 to everyone (broadcast).

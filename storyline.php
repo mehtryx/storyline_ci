@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.4.8
+Version: 0.5.1
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.4.8' );
+define( 'SMRT_STORYLINE_VERSION', '0.5.1' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -59,6 +59,8 @@ class SMRT_Storyline {
 		add_action( 'after_setup_theme', array( $this, 'add_custom_image_sizes' ) );
 		add_action( 'init', array( $this, 'register_storyline' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_alerts_meta_box' ) );
+		add_action( 'add_meta_boxes', array( $this, 'add_no_thumb_box' ) );
+		add_action( 'save_post', array( $this, 'save_post'));
 		add_filter( 'the_content', array( $this, 'refactor_images' ), 99 ); 
 		add_filter( 'the_content', array( $this, 'add_storyline_id' ), 99 ); 
 		add_filter( 'the_content', array( $this, 'process_pd_shortcodes' ), 99 ); 
@@ -419,6 +421,38 @@ class SMRT_Storyline {
 
 					break;
 
+				// test tag for redfrog / kaltura embed testing
+				case 'redfrog':
+					if( $url ) {
+						$embed_id = substr( $url, strrpos( $url, '/', -1 ) + 1 );
+					}
+
+					// optional playlist param
+					$playlist = ( isset($attributes['playlist']) ) ? '?p=' . $attributes['playlist'] : '';
+
+					// video is 16:9 - adjust height
+					$height = intval(($width / 16 ) * 9);
+
+					if( !$embed_id ) return '<!-- redfrog embed error : invalid id -->';
+
+					$embed_string = 'http://redfrogconsulting.com/DEMOS/iframe/' . $embed_id . '/' . $playlist;
+				 	
+				 	break;
+
+				case 'kaltura':
+					if( $url ) {
+						$embed_id = substr( $url, strrpos( $url, '/', -1 ) + 1 );
+					}
+
+					// video is 16:9 - adjust height
+					$height = intval(($width / 16 ) * 9);
+
+					if( !$embed_id ) return '<!-- kaltura embed error : invalid id -->';
+
+					$embed_string = 'http://cdnapi.kaltura.com/html5/html5lib/v2.8.2/mwEmbedFrame.php/p/1698541/uiconf_id/22793731/entry_id/' . $embed_id . '?wid=_1698541&iframeembed=true';
+				 	
+				 	break;
+
 				case 'soundcloud':
 					if( $url ) {
 						$embed_id = substr( $url, strrpos( $url, '/', -1 ) + 1 );
@@ -481,11 +515,6 @@ class SMRT_Storyline {
 						return '<!-- twitter embed error : settings > storyline > twitter settings not set -->';
 					}
 
-					// set codebird consumer key/secret
-					\Codebird\Codebird::setConsumerKey($options['consumer_key'], $options['consumer_secret']);
-					$codebird = WP_Codebird::getInstance();
-					$codebird->setToken($options['oauth_token'], $options['oauth_secret']);
-
 					$embed_type = 'html';
 					
 					if( $url ) {
@@ -496,8 +525,24 @@ class SMRT_Storyline {
 						return '<!-- twitter embed error : invalid id -->';
 					}
 					else {
-						// retrieve tweet and generate html
-						$tweet = $codebird->statuses_show_ID( 'id='.$embed_id );
+						// need to cache twitter data as we are seeing rate limiting issues
+						$cache_key = 'storyline-codebird-statusesshowid-' . $embed_id;
+						
+						// check cache for tweet
+						$tweet = get_transient( $cache_key );
+
+						if( $tweet === false ) {
+							// set codebird consumer key/secret
+							\Codebird\Codebird::setConsumerKey($options['consumer_key'], $options['consumer_secret']);
+							$codebird = WP_Codebird::getInstance();
+							$codebird->setToken($options['oauth_token'], $options['oauth_secret']);
+
+							// retrieve tweet and generate html
+							$tweet = $codebird->statuses_show_ID( 'id='.$embed_id );
+
+							// cache tweet 5 minutes
+							set_transient( $cache_key, $tweet, 300 );
+						}
 
 						if( !isset($tweet->text) ) {
 							return '<!-- twitter embed error : could not retrieve tweet -->';
@@ -632,7 +677,8 @@ class SMRT_Storyline {
 			$text = substr_replace($text, $entity->replace, $entity->start, $entity->length);
 		} 
 
-		return $text;
+		// clean control chars from final tweet
+		return preg_replace('/[^\x{0009}\x{000A}\x{000D}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]/u', '', $text);
 	}
 	
 	/**
@@ -1257,6 +1303,24 @@ class SMRT_Storyline {
 	}	
 
 	/**
+	 * Display the Urban Airship update notification interface in Edit Post screen
+	 *
+	 * @since 0.5.1
+	 *
+	 * @uses current_user_can
+	 * @uses add_meta_box
+	 */
+	function add_no_thumb_box( $post_type ) {
+		global $post;
+		
+		// Exit if not a storyline post, or not published yet
+		if ( 'storyline' !== $post_type)
+			return;
+		if ( current_user_can( 'publish_posts' ) ) {
+			add_meta_box( 'no_thumbnail_checkbox', 'No Thumbnail', array( $this, 'no_thumbnail_checkbox' ), $post_type, 'side', 'low' );
+		}
+	}	
+	/**
 	 * Generating the update notification meta box
 	 *
 	 * @since 0.2.8
@@ -1284,7 +1348,49 @@ class SMRT_Storyline {
 			<input name="submit_breaking" type="submit" value="Push Breaking News Alert" onClick="if(confirm('Are you sure you want to send a Breaking News Alert for this story to everyone?')) { smrt_storyline_alerts_send_breaking(event); } return false;"/>
 		<?php
 	}
+	/**
+	 * Generating the No Thumbnail checkbox
+	 *
+	 * @since 0.5.1
+	 */
+	function no_thumbnail_checkbox(){
+		global $post;
+		$updated = (bool) get_post_meta( $post->ID, 'no_thumbnail' , false );
+		wp_nonce_field('save', 'no_thumbnail_nonce');
+		?>
+			<p id="no-thumbnail"></p>
+			<p>
+				<input name="no_thumbnail" type="checkbox" value="1" <?php checked( $updated ) ?>/> No Thumbnail
+			</p>
+		<?php
+	}	
 	
+	/**
+	 * Saves no_thumnail status on post update
+	 *
+	 * @since 0.5.1
+	 *
+	 * @uses current_user_can
+	 * @uses update_post_meta
+	 * @uses delete_post_meta
+	 * @uses wp_verify_nonce
+	 */
+	public function save_post( $postID ) {
+		global $post;
+		if ( current_user_can( 'edit_post' , $postID ) ){
+			if ( wp_verify_nonce( $_POST['no_thumbnail_nonce'], 'save') ){
+				if ( isset( $_POST['no_thumbnail'] ) ) {
+					update_post_meta( $postID, 'no_thumbnail', true );
+				}
+				else
+				{
+					delete_post_meta( $postID, 'no_thumbnail');
+				}
+			}
+			return;
+		}
+		
+	}
 	/**
 	 * Ajax function to send push notification to Urban Airship
 	 *
