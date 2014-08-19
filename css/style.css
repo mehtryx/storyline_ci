@@ -263,7 +263,7 @@ body { background-color: #ffffff; }
 }
 
 article blockquote:before {
-	/*content: "";*/
+	content: "";
 	color: #9cc;
 	font: 100px/100px "TitlingGothicFBCond-Standard", Arial, Helvetica, sans-serif;
 	padding-left: 10px;
