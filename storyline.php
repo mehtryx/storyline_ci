@@ -1094,9 +1094,10 @@ class SMRT_Storyline {
 		remove_action('edited_smrt-topic', array ( $this, 'save_topic_order' ), 10);
 
         if ( isset( $_POST[ 'term_group' ] ) ) {
+
         	$terms = get_terms( 'smrt-topic', array( 'hide_empty' => 0 ) );
         	$term_to_edit = get_term_by( 'id', $term_id, 'smrt-topic' );
-
+        	
         	if ( $this->order_num_exists( $terms, $_POST[ 'term_group' ] ) || 0 == $term_to_edit->term_group) {
 				
 				$new_order_num = $this->find_next_available_order_number( $terms );
