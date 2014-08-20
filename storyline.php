@@ -798,6 +798,32 @@ class SMRT_Storyline {
 			$slide_image = wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), 'smrt-phone-feature-x2' );
 		}
 		
+		$stryImgFlex = 0;
+		$stryCntntFlex = 0;
+
+		if ( 38 >= strlen( $slides[0] ) ){
+			$stryImgFlex = '1.2';
+			$stryCntntFlex = '0.8';
+		} elseif ( 76 >= strlen( $slides[0] ) ) {
+			$stryImgFlex = '1';
+			$stryCntntFlex = '1';
+ 		} elseif ( 114 >= strlen( $slides[0] ) ) {
+			$stryImgFlex = '0.8';
+			$stryCntntFlex = '1.1';
+ 		} else {
+			$stryImgFlex = '0.7';
+			$stryCntntFlex = '1.2';
+ 		}
+		echo "<style>
+			.story_image {
+				flex: " . $stryImgFlex . " !important;
+			}
+
+			.first_story_content {
+				flex: " . $stryCntntFlex . " !important;
+			}
+		</style>";
+
 		echo "<div class='smart-device-preview'>
 					<div class='x-align-center'> 
 						<h1>iPhone 4 simulator</h1>
@@ -810,7 +836,7 @@ class SMRT_Storyline {
 									<div class='swiper-slide'>
 										<div class='story_item'>
 											<div class='flex-container'>" .
-												( is_array( $slide_image ) ? "<div class='story_image' style='background-image: url(" . esc_url( $slide_image[0] ) . ");'></div>" : "" ) . "
+												( is_array( $slide_image ) ? "<div class='story_image story-feature-image' style='background-image: url(" . esc_url( $slide_image[0] ) . ");'></div>" : "" ) . "
 												<div class='first_story_content'>
 													<div class='story_headline'><h3>" . esc_html( $post->post_title )  . "</h3></div>
 													<div class='timestamp'><span class='updated'>Updated: </span><span>11:40 AM</span></div>
