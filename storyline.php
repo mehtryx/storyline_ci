@@ -1331,9 +1331,6 @@ class SMRT_Storyline {
 		?>
 			<p id="update-status"></p>
 			<input name="submit_update" type="submit" value="Push Update Alert" onClick="smrt_storyline_alerts_send_update(event);"/>
-			<p>
-				<input id="check-update" type="checkbox" <?php checked( $updated ) ?> onChange="smrt_storyline_alerts_check_update(event);" /> Updated
-			</p>
 		<?php
 	}	
 
