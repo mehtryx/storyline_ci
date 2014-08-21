@@ -88,16 +88,18 @@ class SMRT_Storyline {
 			add_action( 'manage_storyline_posts_custom_column' , array( $this, 'custom_columns' ), 10, 2 );
         }
 
-        // adds topic ordering column
+        // adds topic ordering functionality
+        add_action( 'wp_ajax_toggle_topic', array( $this, 'topics_ordering_callback' ) );
+
         if( is_admin() ) {
             add_filter( 'manage_edit-smrt-topic_columns', array( $this, 'add_term_order_column' ) );
+            add_filter( 'manage_edit-smrt-topic_columns', array( $this, 'add_topic_enable_toggle' ) );
             add_filter( 'manage_edit-smrt-topic_sortable_columns', array( $this, 'make_topic_order_column_sortable' ) );
             add_filter( 'manage_smrt-topic_custom_column', array( $this, 'topic_order_custom_columns' ), 10, 3 );
+            add_filter( 'manage_smrt-topic_custom_column', array( $this, 'topic_enable_toggle_custom_columns' ), 10, 3 );
             add_action( 'smrt-topic_edit_form_fields', array( $this, 'topic_order_edit_field' ) );
             add_action( 'edited_smrt-topic', array( $this, 'save_topic_order' ), 10, 1 );
             add_action( 'quick_edit_custom_box', array( $this, 'topic_order_quick_edit_field' ), 10, 3 );
-            //add_action( 'smrt-topic_add_form_fields', array( $this, 'topic_order_edit_field' ) );
-            //add_action( 'created_smrt-topic', array( $this, 'save_topic_order' ), 13, 1 );
         }
 		
 		// Add admin hooks for urban airship settings
@@ -1098,7 +1100,7 @@ class SMRT_Storyline {
         	$terms = get_terms( 'smrt-topic', array( 'hide_empty' => 0 ) );
         	$term_to_edit = get_term_by( 'id', $term_id, 'smrt-topic' );
         	
-        	if ( $this->order_num_exists( $terms, $_POST[ 'term_group' ] ) || 0 == $term_to_edit->term_group) {
+        	if ( $this->order_num_exists( $terms, $_POST[ 'term_group' ] ) ) {
 				
 				$new_order_num = $this->find_next_available_order_number( $terms );
 
@@ -1120,7 +1122,11 @@ class SMRT_Storyline {
 	 *
 	 */
     public function topic_order_quick_edit_field( $column, $screen, $taxonomy ) {
-         ?>
+    	if( 'topic_enabled' === $column ) {
+    		return false;
+    	}
+
+        ?>
             <fieldset>
                 <div id="quick-edit-term_group" class="inline-edit-col">
                     <label>
@@ -1162,6 +1168,82 @@ class SMRT_Storyline {
     }
 
 	/**
+	 * Enables topic to be output to JSON feed
+	 *
+	 * @since 0.3.9
+	 *
+	 */
+    public function enable_topic( $term_id, $terms ) {
+    	if( !isset( $terms ) ) {
+    		$args = array (
+            	'hide_empty' => 0,
+            	'orderby' => 'term_group'
+        	);
+
+        	$terms = get_terms( 'smrt-topic', $args );
+    	}
+
+    	return wp_update_term( $term_id, 'smrt-topic', array( 'term_group' => $this->find_next_available_order_number( $terms ) ) );
+    }
+
+	/**
+	 * Disables topic to be output to JSON feed
+	 *
+	 * @since 0.3.9
+	 *
+	 */
+    public function disable_topic( $term_id ) {
+    	return wp_update_term( $term_id, 'smrt-topic', array( 'term_group' => 0 ) );
+    }
+
+	/**
+	 * Adds enable topic column to Edit Topics screen
+	 *
+	 * @since 0.3.9
+	 *
+	 */
+	public function add_topic_enable_toggle( $columns ) {
+		return array_merge( $columns, array( 'topic_enabled' => __( 'Topic Enabled' ) ) );
+	}
+
+	/**
+	 * Adds checkbox to enable topic column in Edit Topics screen.
+	 *
+	 * @since 0.3.9
+	 *
+	 */
+	public function topic_enable_toggle_custom_columns( $c, $column_name, $term_id ) {
+		if( 'topic_enabled' === $column_name ) {
+            $term = get_term( $term_id, 'smrt-topic' );
+            if( $term->term_group ) {
+            	echo '<input type="checkbox" name="topic_enabled" id="' . $term->term_id . '" checked />';
+            } else {
+            	echo '<input type="checkbox" name="topic_enabled" id="' . $term->term_id . '" />';
+            }
+        }
+	}
+
+	/**
+	 * AJAX callback for enabling/disabling when the checkbox is clicked in the Edit Topic screen
+	 *
+	 * @since 0.3.9
+	 *
+	 */
+	public function topics_ordering_callback() {
+		if ( $_POST[ 'enabled' ] ) {
+			$topic = $this->enable_topic( $_POST[ 'term_id' ] );
+			$enabled_topic = get_term( $topic[ 'term_id' ], 'smrt-topic' );
+			echo $enabled_topic->term_group;
+			die();
+
+		} else {
+			$this->disable_topic( $_POST[ 'term_id' ] );
+			echo 0;
+			die();
+		}
+	}
+
+	/**
 	 * Returns the number of Topics to use as a default order priority
 	 *
 	 * @since 0.3.9
@@ -1181,10 +1263,19 @@ class SMRT_Storyline {
 	 * @uses sanitize_text_field
 	 */
 	public function smrt_topics_callback() {
-	
+
 		if ( false === ( $topics = get_transient( 'smrt_topics_callback_results' ) ) ) {
-			$topics = get_terms( 'smrt-topic', array( 'orderby' => 'count', 'order' => 'DESC', 'number' => 6 ) );
-			
+
+			$raw_topics = get_terms( 'smrt-topic', array( 'orderby' => 'term_group', 'number' => 8 ) );
+
+			$topics = array();
+
+			foreach ( $raw_topics as $topic ) {
+				if ( $topic->term_group > 0 ) {
+					$topics[] = $topic;
+				}
+			}
+
 			// cache for 5 mins
 			set_transient( 'smrt_topics_callback_results', $topics, 300 );
 		}
@@ -1276,6 +1367,9 @@ class SMRT_Storyline {
         if ( 'edit-tags.php' === $pagenow && ( isset( $_GET[ 'taxonomy' ] ) ) && 'smrt-topic' === $_GET[ 'taxonomy' ] && !isset( $_GET[ 'action' ] ) ) {
             wp_register_script('quick-edit-js', plugins_url( 'js/quick-edit.js', __FILE__ ), array( 'jquery' ) );
             wp_enqueue_script( 'quick-edit-js' );
+
+            wp_register_script('toggle-topics', plugins_url( 'js/toggle_topics.js', __FILE__ ), array( 'jquery' ) );
+            wp_enqueue_script( 'toggle-topics' );
         }
 	}
 	

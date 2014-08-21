@@ -62,6 +62,23 @@ class StorylineTest extends WP_UnitTestCase {
         $this->assertEquals( 7,  $new_gaming->term_group );
     }
 
+    function testDisableTopic() {
+        $topic_to_disable = 22;
+        $disabled_topic = $this->storyline_plugin->disable_topic( $topic_to_disable );
+        $disable_topic_to_test = get_term( $disable_topic[ 'term_id' ], 'smrt-topic' );
+        $this->assertEquals( 0, $disable_topic->term_group );
+    }
+
+    function testEnableTopic() {
+        $topic_id = 35;
+        $topic = $this->storyline_plugin->disable_topic( $topic_id );
+        $topic_to_test = get_term( $topic[ 'term_id' ], 'smrt-topic' );
+        $topic_enabled = $this->storyline_plugin->enable_topic( $topic_to_test->term_id );
+        $enable_topic_to_test = get_term( $topic_enabled[ 'term_id' ], 'smrt-topic' );
+        $new_spot = $this->storyline_plugin->find_next_available_order_number( $this->terms );
+        $this->assertEquals( $new_spot, $enable_topic_to_test->term_group );
+    }
+
     function tearDown() {
         parent::tearDown();
         if( isset( $_POST[ 'term_group' ] ) ) {
