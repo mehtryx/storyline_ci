@@ -75,6 +75,8 @@ class SMRT_Storyline {
 		add_action( 'wp_ajax_smrt_alert_check_update', array ( $this, 'smrt_alert_check_update_callback' ) );
 		add_action( 'wp_ajax_smrt_push_ua_breaking', array ( $this, 'smrt_push_ua_breaking_callback' ) );
 		
+		add_action( 'media_buttons', array( $this, 'media_buttons' ), 15, 1 );
+		
 		// custom sorting by date and menu_order
 		add_action( 'pre_get_posts', array( $this, 'pre_get_storylines_sort' ) );
 		
