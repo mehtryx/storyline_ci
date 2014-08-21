@@ -351,7 +351,35 @@ class SMRT_Storyline {
 
 		return $content;
 	}
-
+	/**
+	 *
+	 * Shortcode dropdown selection
+	 *
+	 * @since 0.5.2
+	 * @uses esc_attr, esc_html
+	 * @param N/A
+	 * @return echos html dropdown
+	 */
+	function media_buttons(){
+		global $post;
+		if ( 'storyline' == trim( $post->post_type ) ) {
+			$_shortcode_tags = Array( 
+				'Instagram' => '[pd.instagram id=""]',
+				'Kaltura' => '[pd.kaltura id=""]',
+				'Soundcloud' => '[pd.soundcloud id=""]',
+				'Twitter' => '[pd.twitter id=""]',
+				'YouTube' => '[pd.youtube id=""]',
+				'Vimeo' => '[pd.vimeo id=""]',
+				'Vine' => '[pd.vine id=""]',
+				);
+		}
+		echo '&nbsp;<select id="sc_select">';
+		echo '<option value="">-- Shortcodes --</option>';
+		foreach ( $_shortcode_tags as $_key => $_val ) {
+			echo '<option value="' . esc_attr( $_val ) . '">' . esc_html( $_key ) . '</option>';
+		}
+		echo '</select>';
+	}
 	/**
 	 * Replace callback to handle [pd.{embed name} url= width= height=] embed tags
 	 *
