@@ -76,7 +76,7 @@ class SMRT_Storyline {
 		add_action( 'wp_ajax_smrt_push_ua_breaking', array ( $this, 'smrt_push_ua_breaking_callback' ) );
 		
 		add_action( 'media_buttons', array( $this, 'media_buttons' ), 15, 1 );
-		
+
 		// custom sorting by date and menu_order
 		add_action( 'pre_get_posts', array( $this, 'pre_get_storylines_sort' ) );
 		
@@ -370,10 +370,10 @@ class SMRT_Storyline {
 				'Kaltura' => '[pd.kaltura id=""]',
 				'Soundcloud' => '[pd.soundcloud id=""]',
 				'Twitter' => '[pd.twitter id=""]',
-				'YouTube' => '[pd.youtube id=""]',
 				'Vimeo' => '[pd.vimeo id=""]',
 				'Vine' => '[pd.vine id=""]',
-				);
+				'YouTube' => '[pd.youtube id=""]',
+			);
 		}
 		echo '&nbsp;<select id="sc_select">';
 		echo '<option value="">-- Shortcodes --</option>';
