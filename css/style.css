@@ -264,9 +264,7 @@ body { background-color: #ffffff; }
 	position: absolute;
 	top:425px;
 	z-index: 5;
-
 }
-
 article blockquote:before {
 	content: "";
 	color: #9cc;
@@ -275,6 +273,7 @@ article blockquote:before {
 	padding-right: 10px;
 	width: 0;
 	height: 0;
+	position: absolute; 
 }
 article blockquote {
 	padding: 0;
@@ -286,7 +285,7 @@ article.l-article blockquote p {
 	padding-top: 20px;
 	padding-left: 27px;
 	padding-right: 26px;
-	font-size: 0.78em;
+	font-size: 0.9em;
 	font-style: italic;
 	line-height: 1.35em;
 	font-family: "Shift";
