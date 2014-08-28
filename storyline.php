@@ -1082,40 +1082,6 @@ class SMRT_Storyline {
     }
 
 	/**
-	 * Saves term_group of a term to use for ordering terms
-	 *
-	 * @since 0.3.9
-	 * @uses remove_action()
-	 * @uses get_terms()
-	 * @uses get_term_by()
-	 * @uses wp_update_term()
-	 * @uses add_action()
-	 *
-	 */
-    public function save_topic_order( $term_id ) {
-		remove_action('edited_smrt-topic', array ( $this, 'save_topic_order' ), 10);
-
-        if ( isset( $_POST[ 'term_group' ] ) ) {
-
-        	$terms = get_terms( 'smrt-topic', array( 'hide_empty' => 0 ) );
-        	$term_to_edit = get_term_by( 'id', $term_id, 'smrt-topic' );
-        	
-        	if ( $this->order_num_exists( $terms, $_POST[ 'term_group' ] ) ) {
-				
-				$new_order_num = $this->find_next_available_order_number( $terms );
-
-        		$output = wp_update_term( $term_id, 'smrt-topic', array( 'term_group' => $new_order_num ) );
-        		
-        	} else {
-
-        		$output = wp_update_term( $term_id, 'smrt-topic', array( 'term_group' => $_POST[ 'term_group' ] ) );
-        	}
-        }
-
-        add_action( 'edited_smrt-topic', array( $this, 'save_topic_order' ), 10, 1 );
-    }
-
-	/**
 	 * Renders Order edit field in quick edit form
 	 *
 	 * @since 0.3.9
@@ -1148,23 +1114,6 @@ class SMRT_Storyline {
         $columns[ 'term_group' ] = 'term_group';
 
         return $columns;
-    }
-
-	/**
-	 * Checks if the ordering priority number is already in use. Returns true if it is, false if it isn't.
-	 *
-	 * @since 0.3.9
-	 *
-	 */
-    public function order_num_exists( $terms, $order_num ) {
-    	foreach ( $terms as $term ) {
-    		if ( $order_num === ( int )$term->term_group ) {
-
-    			return true;
-    		}
-    	}
-
-    	return false;
     }
 
 	/**
@@ -1243,14 +1192,91 @@ class SMRT_Storyline {
 		}
 	}
 
+    /**
+     * Saves term_group of a term to use for ordering terms
+     *
+     * @since 0.3.9
+     * @uses remove_action()
+     * @uses get_terms()
+     * @uses get_term_by()
+     * @uses wp_update_term()
+     * @uses add_action()
+     *
+     */
+    public function save_topic_order( $term_id ) {
+        remove_action('edited_smrt-topic', array ( $this, 'save_topic_order' ), 10);
+
+        if ( isset( $_POST[ 'term_group' ] ) ) {
+
+            $terms = get_terms( 'smrt-topic', array( 'hide_empty' => 0, 'orderby' => 'term_group' ) );
+
+            if ( $this->order_num_exists( $terms, $_POST[ 'term_group' ] ) ) {
+                $new_order_num = $this->find_next_available_order_number( $terms );
+                wp_update_term( $term_id, 'smrt-topic', array( 'term_group' => $new_order_num ) );
+
+            } else {
+
+                wp_update_term( $term_id, 'smrt-topic', array( 'term_group' => $_POST[ 'term_group' ] ) );
+            }
+        }
+
+        add_action( 'edited_smrt-topic', array( $this, 'save_topic_order' ), 10, 1 );
+    }
+
+    /**
+     * Checks if the ordering priority number is already in use. Returns true if it is, false if it isn't.
+     *
+     * @since 0.3.9
+     *
+     */
+    public function order_num_exists( $terms, $order_num ) {
+
+        $topic_order_numbers = $this->get_topic_order_as_array( $terms );
+
+        for ( $i = 0; $i < count( $topic_order_numbers ); $i++ ) {
+            if ( $order_num === $topic_order_numbers[ $i ] ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 	/**
-	 * Returns the number of Topics to use as a default order priority
+	 * Returns the available priority to use for ordering topics
 	 *
 	 * @since 0.3.9
 	 *
 	 */
     public function find_next_available_order_number( $terms ) {
-    	return count( $terms ) + 1;
+
+        $term_priority_slots = 8;
+
+        $topic_priorities = $this->get_topic_order_as_array( $terms );
+
+        for ( $i = 1; $i <= $term_priority_slots; $i++ ) {
+
+            if ( $topic_priorities[ $i - 1 ] != $i ) {
+                return $i;
+            }
+        }
+    }
+
+
+    /**
+     * Returns the term_group values of topics
+     * @since 0.3.9
+     */
+    public function get_topic_order_as_array( $terms ) {
+        $priorities = array();
+
+        foreach ( $terms as $term ) {
+            if ( $term->term_group > 0 ) {
+                $priorities[] = intval( $term->term_group );
+            }
+        }
+
+        return $priorities;
     }
 
 	/**
@@ -1277,7 +1303,7 @@ class SMRT_Storyline {
 			}
 
 			// cache for 5 mins
-			set_transient( 'smrt_topics_callback_results', $topics, 300 );
+			//set_transient( 'smrt_topics_callback_results', $topics, 300 );
 		}
 		
 		if ( isset( $_GET[ 'jsonp' ] ) ) {
