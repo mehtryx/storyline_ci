@@ -75,6 +75,8 @@ class SMRT_Storyline {
 		add_action( 'wp_ajax_smrt_alert_check_update', array ( $this, 'smrt_alert_check_update_callback' ) );
 		add_action( 'wp_ajax_smrt_push_ua_breaking', array ( $this, 'smrt_push_ua_breaking_callback' ) );
 		
+		add_action( 'media_buttons', array( $this, 'media_buttons' ), 15, 1 );
+
 		// custom sorting by date and menu_order
 		add_action( 'pre_get_posts', array( $this, 'pre_get_storylines_sort' ) );
 		
@@ -351,7 +353,35 @@ class SMRT_Storyline {
 
 		return $content;
 	}
-
+	/**
+	 *
+	 * Shortcode dropdown selection
+	 *
+	 * @since 0.5.2
+	 * @uses esc_attr, esc_html
+	 * @param N/A
+	 * @return echos html dropdown
+	 */
+	function media_buttons(){
+		global $post;
+		if ( 'storyline' == trim( $post->post_type ) ) {
+			$_shortcode_tags = Array( 
+				'Instagram' => '[pd.instagram id=""]',
+				'Kaltura' => '[pd.kaltura id=""]',
+				'Soundcloud' => '[pd.soundcloud id=""]',
+				'Twitter' => '[pd.twitter id=""]',
+				'Vimeo' => '[pd.vimeo id=""]',
+				'Vine' => '[pd.vine id=""]',
+				'YouTube' => '[pd.youtube id=""]',
+			);
+		}
+		echo '&nbsp;<select id="sc_select">';
+		echo '<option value="">-- Shortcodes --</option>';
+		foreach ( $_shortcode_tags as $_key => $_val ) {
+			echo '<option value="' . esc_attr( $_val ) . '">' . esc_html( $_key ) . '</option>';
+		}
+		echo '</select>';
+	}
 	/**
 	 * Replace callback to handle [pd.{embed name} url= width= height=] embed tags
 	 *
