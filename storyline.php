@@ -811,17 +811,17 @@ class SMRT_Storyline {
 		// Hardcoded, no variables to escape
 		$hardcoded_adbanner = "<div class='adBanner'></div>";	
 		
+		wp_register_script( 'storylinejquery', plugins_url( 'js/jquery.js', __FILE__ ), '', '', TRUE );
 		wp_register_style( 'storylinestyle', plugins_url( 'css/style.css', __FILE__ ) );
 		wp_register_style( 'swipercss', plugins_url( 'css/idangerous.swiper.css', __FILE__ ) );
 		wp_register_script( 'storylinescript', plugins_url ( 'js/script.js', __FILE__ ), '', '', TRUE );
 		wp_register_script( 'swiperscript', plugins_url( 'js/idangerous.swiper-2.1.min.js', __FILE__ ), '', '', TRUE );
-		wp_register_script( 'storylinejquery', plugins_url( 'js/jquery.js', __FILE__ ), '', '', TRUE );
 		
+		wp_enqueue_script( 'storylinejquery' );
 		wp_enqueue_style( 'storylinestyle' );
 		wp_enqueue_style( 'swipercss' );
 		wp_enqueue_script( 'swiperscript' );
 		wp_enqueue_script( 'storylinescript' );
-		wp_enqueue_script( 'storylinejquery' );
 		
 		$slides = $this->split_content( $content );
 		$slide_image = null;
