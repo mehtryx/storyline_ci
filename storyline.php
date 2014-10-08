@@ -381,7 +381,6 @@ class SMRT_Storyline {
 		if ( 'storyline' == trim( $post->post_type ) ) {
 			$_shortcode_tags = Array( 
 				'Instagram' => '[pd.instagram id=""]',
-				'Kaltura' => '[pd.kaltura id=""]',
 				'Soundcloud' => '[pd.soundcloud id=""]',
 				'Twitter' => '[pd.twitter id=""]',
 				'Vimeo' => '[pd.vimeo id=""]',
