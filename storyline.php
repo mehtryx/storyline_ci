@@ -75,6 +75,8 @@ class SMRT_Storyline {
 		add_action( 'wp_ajax_smrt_alert_check_update', array ( $this, 'smrt_alert_check_update_callback' ) );
 		add_action( 'wp_ajax_smrt_push_ua_breaking', array ( $this, 'smrt_push_ua_breaking_callback' ) );
 		
+		add_action( 'media_buttons', array( $this, 'media_buttons' ), 15, 1 );
+
 		// custom sorting by date and menu_order
 		add_action( 'pre_get_posts', array( $this, 'pre_get_storylines_sort' ) );
 		
@@ -351,7 +353,35 @@ class SMRT_Storyline {
 
 		return $content;
 	}
-
+	/**
+	 *
+	 * Shortcode dropdown selection
+	 *
+	 * @since 0.5.2
+	 * @uses esc_attr, esc_html
+	 * @param N/A
+	 * @return echos html dropdown
+	 */
+	function media_buttons(){
+		global $post;
+		if ( 'storyline' == trim( $post->post_type ) ) {
+			$_shortcode_tags = Array( 
+				'Instagram' => '[pd.instagram id=""]',
+				'Kaltura' => '[pd.kaltura id=""]',
+				'Soundcloud' => '[pd.soundcloud id=""]',
+				'Twitter' => '[pd.twitter id=""]',
+				'Vimeo' => '[pd.vimeo id=""]',
+				'Vine' => '[pd.vine id=""]',
+				'YouTube' => '[pd.youtube id=""]',
+			);
+		}
+		echo '&nbsp;<select id="sc_select">';
+		echo '<option value="">-- Shortcodes --</option>';
+		foreach ( $_shortcode_tags as $_key => $_val ) {
+			echo '<option value="' . esc_attr( $_val ) . '">' . esc_html( $_key ) . '</option>';
+		}
+		echo '</select>';
+	}
 	/**
 	 * Replace callback to handle [pd.{embed name} url= width= height=] embed tags
 	 *
@@ -781,11 +811,13 @@ class SMRT_Storyline {
 		// Hardcoded, no variables to escape
 		$hardcoded_adbanner = "<div class='adBanner'></div>";	
 		
+		wp_register_script( 'storylinejquery', plugins_url( 'js/jquery.js', __FILE__ ), '', '', TRUE );
 		wp_register_style( 'storylinestyle', plugins_url( 'css/style.css', __FILE__ ) );
 		wp_register_style( 'swipercss', plugins_url( 'css/idangerous.swiper.css', __FILE__ ) );
 		wp_register_script( 'storylinescript', plugins_url ( 'js/script.js', __FILE__ ), '', '', TRUE );
 		wp_register_script( 'swiperscript', plugins_url( 'js/idangerous.swiper-2.1.min.js', __FILE__ ), '', '', TRUE );
 		
+		wp_enqueue_script( 'storylinejquery' );
 		wp_enqueue_style( 'storylinestyle' );
 		wp_enqueue_style( 'swipercss' );
 		wp_enqueue_script( 'swiperscript' );
@@ -798,6 +830,32 @@ class SMRT_Storyline {
 			$slide_image = wp_get_attachment_image_src( get_post_thumbnail_id( $post->ID ), 'smrt-phone-feature-x2' );
 		}
 		
+		$stryImgFlex = 0;
+		$stryCntntFlex = 0;
+
+		if ( 38 >= strlen( $slides[0] ) ){
+			$stryImgFlex = '1.1';
+			$stryCntntFlex = '0.9';
+		} elseif ( 76 >= strlen( $slides[0] ) ) {
+			$stryImgFlex = '0.9';
+			$stryCntntFlex = '1';
+ 		} elseif ( 114 >= strlen( $slides[0] ) ) {
+			$stryImgFlex = '0.8';
+			$stryCntntFlex = '1.1';
+ 		} else {
+			$stryImgFlex = '0.7';
+			$stryCntntFlex = '1.2';
+ 		}
+		echo "<style>
+			.story_image {
+				flex: " . $stryImgFlex . " !important;
+			}
+
+			.first_story_content {
+				flex: " . $stryCntntFlex . " !important;
+			}
+		</style>";
+
 		echo "<div class='smart-device-preview'>
 					<div class='x-align-center'> 
 						<h1>iPhone 4 simulator</h1>
@@ -810,7 +868,7 @@ class SMRT_Storyline {
 									<div class='swiper-slide'>
 										<div class='story_item'>
 											<div class='flex-container'>" .
-												( is_array( $slide_image ) ? "<div class='story_image' style='background-image: url(" . esc_url( $slide_image[0] ) . ");'></div>" : "" ) . "
+												( is_array( $slide_image ) ? "<div class='story_image story-feature-image' style='background-image: url(" . esc_url( $slide_image[0] ) . ");'></div>" : "" ) . "
 												<div class='first_story_content'>
 													<div class='story_headline'><h3>" . esc_html( $post->post_title )  . "</h3></div>
 													<div class='timestamp'><span class='updated'>Updated: </span><span>11:40 AM</span></div>
