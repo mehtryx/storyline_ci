@@ -834,10 +834,10 @@ class SMRT_Storyline {
 		$stryCntntFlex = 0;
 
 		if ( 38 >= strlen( $slides[0] ) ){
-			$stryImgFlex = '1.2';
-			$stryCntntFlex = '0.8';
+			$stryImgFlex = '1.1';
+			$stryCntntFlex = '0.9';
 		} elseif ( 76 >= strlen( $slides[0] ) ) {
-			$stryImgFlex = '1';
+			$stryImgFlex = '0.9';
 			$stryCntntFlex = '1';
  		} elseif ( 114 >= strlen( $slides[0] ) ) {
 			$stryImgFlex = '0.8';
