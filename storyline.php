@@ -1272,7 +1272,6 @@ class SMRT_Storyline {
                 wp_update_term( $term_id, 'smrt-topic', array( 'term_group' => $new_order_num ) );
 
             } else {
-
                 wp_update_term( $term_id, 'smrt-topic', array( 'term_group' => $_POST[ 'term_group' ] ) );
             }
         }
@@ -1291,7 +1290,7 @@ class SMRT_Storyline {
         $topic_order_numbers = $this->get_topic_order_as_array( $terms );
 
         for ( $i = 0; $i < count( $topic_order_numbers ); $i++ ) {
-            if ( $order_num === $topic_order_numbers[ $i ] ) {
+            if ( intval( $order_num ) === $topic_order_numbers[ $i ] ) {
                 return true;
             }
         }
