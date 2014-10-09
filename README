@@ -63,6 +63,9 @@ Load VIP shared plugin library
 
 == Changelog ==
 
+= 0.5.2 =
+* Added Jquery to storyline preview as it is no longer included in web template
+
 = 0.5.1 =
 * Added No Thumbail checkbox to storyline post edit
 * Update twitter hidden control character filter
