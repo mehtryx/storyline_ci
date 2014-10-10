@@ -1347,13 +1347,18 @@ class SMRT_Storyline {
 	 */
 	public function smrt_topics_callback() {
 
-		$raw_topics = get_terms( 'smrt-topic', array( 'orderby' => 'term_group', 'number' => 8 ) );
+		$topic_limit = 8;
+
+		$raw_topics = get_terms( 'smrt-topic', array( 'orderby' => 'term_group' ) );
 
 		$topics = array();
 
 		foreach ( $raw_topics as $topic ) {
+			if( $topic_limit == 0 ) break;
+
 			if ( $topic->term_group > 0 ) {
 				$topics[] = $topic;
+				$topic_limit--;
 			}
 		}
 		
