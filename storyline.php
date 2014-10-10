@@ -1094,7 +1094,8 @@ class SMRT_Storyline {
 			$topics = get_terms( 'smrt-topic', array( 'orderby' => 'count', 'order' => 'DESC', 'number' => 6 ) );
 			
 			// cache for 5 mins
-			set_transient( 'smrt_topics_callback_results', $topics, 300 );
+			//Temporarily remove caching to see if it resolves an issue with Topics not displaying between markets 
+			//set_transient( 'smrt_topics_callback_results', $topics, 300 );
 		}
 		
 		if ( isset( $_GET[ 'jsonp' ] ) ) {
