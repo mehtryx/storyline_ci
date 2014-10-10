@@ -1347,20 +1347,14 @@ class SMRT_Storyline {
 	 */
 	public function smrt_topics_callback() {
 
-		if ( false === ( $topics = get_transient( 'smrt_topics_callback_results' ) ) ) {
+		$raw_topics = get_terms( 'smrt-topic', array( 'orderby' => 'term_group', 'number' => 8 ) );
 
-			$raw_topics = get_terms( 'smrt-topic', array( 'orderby' => 'term_group', 'number' => 8 ) );
+		$topics = array();
 
-			$topics = array();
-
-			foreach ( $raw_topics as $topic ) {
-				if ( $topic->term_group > 0 ) {
-					$topics[] = $topic;
-				}
+		foreach ( $raw_topics as $topic ) {
+			if ( $topic->term_group > 0 ) {
+				$topics[] = $topic;
 			}
-
-			// cache for 5 mins
-			//set_transient( 'smrt_topics_callback_results', $topics, 300 );
 		}
 		
 		if ( isset( $_GET[ 'jsonp' ] ) ) {
