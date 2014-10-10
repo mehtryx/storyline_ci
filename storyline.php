@@ -1272,7 +1272,6 @@ class SMRT_Storyline {
                 wp_update_term( $term_id, 'smrt-topic', array( 'term_group' => $new_order_num ) );
 
             } else {
-
                 wp_update_term( $term_id, 'smrt-topic', array( 'term_group' => $_POST[ 'term_group' ] ) );
             }
         }
@@ -1291,7 +1290,7 @@ class SMRT_Storyline {
         $topic_order_numbers = $this->get_topic_order_as_array( $terms );
 
         for ( $i = 0; $i < count( $topic_order_numbers ); $i++ ) {
-            if ( $order_num === $topic_order_numbers[ $i ] ) {
+            if ( intval( $order_num ) === $topic_order_numbers[ $i ] ) {
                 return true;
             }
         }
@@ -1349,17 +1348,21 @@ class SMRT_Storyline {
 
 		$topic_limit = 8;
 
-		$raw_topics = get_terms( 'smrt-topic', array( 'orderby' => 'term_group' ) );
+		if ( ( $topics = get_transient( 'smrt_topics_callback_results' ) ) === false ) {
+			$raw_topics = get_terms( 'smrt-topic', array( 'orderby' => 'term_group' ) );
 
-		$topics = array();
+			$topics = array();
 
-		foreach ( $raw_topics as $topic ) {
-			if( $topic_limit == 0 ) break;
+			foreach ( $raw_topics as $topic ) {
+				if( $topic_limit == 0 ) break;
 
-			if ( $topic->term_group > 0 ) {
-				$topics[] = $topic;
-				$topic_limit--;
+				if ( $topic->term_group > 0 ) {
+					$topics[] = $topic;
+					$topic_limit--;
+				}
 			}
+
+			set_transient( 'smrt_topics_callback_results', $topics, 60 );
 		}
 		
 		if ( isset( $_GET[ 'jsonp' ] ) ) {
