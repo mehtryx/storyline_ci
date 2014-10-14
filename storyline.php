@@ -388,7 +388,7 @@ class SMRT_Storyline {
 				'YouTube' => '[pd.youtube id=""]',
 			);
 		}
-		echo '&nbsp;<select id="sc_select">';
+		echo '&nbsp;<select id="sc_select_storyline">';
 		echo '<option value="">-- Shortcodes --</option>';
 		foreach ( $_shortcode_tags as $_key => $_val ) {
 			echo '<option value="' . esc_attr( $_val ) . '">' . esc_html( $_key ) . '</option>';
