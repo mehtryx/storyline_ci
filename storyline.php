@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.5.1
+Version: 0.5.2
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.5.1' );
+define( 'SMRT_STORYLINE_VERSION', '0.5.2' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -358,7 +358,7 @@ class SMRT_Storyline {
 
 		// filter for our embed shortcodes - [pd.youtube url=... width=[300|100%]]
 		$content = preg_replace_callback(
-				'/\[pd\.(?<name>.*?)\s+(?<attributes>.*)\s*\]/i',
+				'/\[pd\.(?<name>.*?)\s+(?<attributes>.*?)\s*\]/i',
 				function($matches) {
 					return SMRT_Storyline::render_pd_short_code($matches);
 				},
