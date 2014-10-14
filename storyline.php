@@ -378,6 +378,7 @@ class SMRT_Storyline {
 	 */
 	function media_buttons(){
 		global $post;
+		
 		if ( 'storyline' == trim( $post->post_type ) ) {
 			$_shortcode_tags = Array( 
 				'Instagram' => '[pd.instagram id=""]',
@@ -387,13 +388,16 @@ class SMRT_Storyline {
 				'Vine' => '[pd.vine id=""]',
 				'YouTube' => '[pd.youtube id=""]',
 			);
+		
+			echo '&nbsp;<select id="sc_select_storyline">';
+			echo '<option value="">-- Shortcodes --</option>';
+
+			foreach ( $_shortcode_tags as $_key => $_val ) {
+				echo '<option value="' . esc_attr( $_val ) . '">' . esc_html( $_key ) . '</option>';
+			}
+
+			echo '</select>';
 		}
-		echo '&nbsp;<select id="sc_select_storyline">';
-		echo '<option value="">-- Shortcodes --</option>';
-		foreach ( $_shortcode_tags as $_key => $_val ) {
-			echo '<option value="' . esc_attr( $_val ) . '">' . esc_html( $_key ) . '</option>';
-		}
-		echo '</select>';
 	}
 	/**
 	 * Replace callback to handle [pd.{embed name} url= width= height=] embed tags
@@ -1440,6 +1444,11 @@ class SMRT_Storyline {
 		global $pagenow;
 		global $post;
 		
+		if( 'storyline' === $post->post_type ) {
+			wp_register_script('smrt-admin-js', plugins_url( 'js/admin.js', __FILE__ ), array( 'jquery' ) );
+            wp_enqueue_script( 'smrt-admin-js' );
+		}
+
 		if ( 'post.php' === $pagenow && 'storyline' === $post->post_type ) {
 			wp_enqueue_script( 'smrt-storyline-ua-alerts', plugins_url( 'js/alerts.js', __FILE__ ) );
 			
