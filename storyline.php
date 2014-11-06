@@ -315,7 +315,7 @@ class SMRT_Storyline {
 		$image = wp_get_attachment_image_src( $thumbnail_id, $size );
 
 		$image_url = "";
-		if( isset( $image[0] )= && $image[0] != null ) {
+		if( isset( $image[0] ) && $image[0] != null ) {
 			$image_url = $image[0];
 		}
 
