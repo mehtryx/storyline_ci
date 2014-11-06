@@ -313,7 +313,13 @@ class SMRT_Storyline {
 	 */
 	function add_image_url( $thumbnail_id, $size ) {
 		$image = wp_get_attachment_image_src( $thumbnail_id, $size );
-		return $image[0] == null ? "" : $image[0];
+
+		$image_url = "";
+		if( isset( $image[0] )= && $image[0] != null ) {
+			$image_url = $image[0];
+		}
+
+		return $image_url;
 	}
 
 	/**
