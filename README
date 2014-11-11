@@ -1,7 +1,7 @@
 === storyline ===
 Contributors: Edward de Groot, Donnie Marges, Waheed Ashraf, Keith Benedict, Goldwin Guenther, Chris Murphy
 Tested up to: 4.1-alpha-20141014
-Stable tag: 0.5.2
+Stable tag: 0.5.3
 License: MIT
 License URI: https://github.com/Postmedia/storyline/blob/master/LICENSE
 
@@ -62,6 +62,9 @@ Load VIP shared plugin library
 
 
 == Changelog ==
+
+= 0.5.3 =
+* Fix image null values. Would lock up app if null was passed. Will fix in future versions of app.
 
 = 0.5.2 =
 * Fix greedy regex on pd.shortcode attributes ( affected storyline web template embeds )
