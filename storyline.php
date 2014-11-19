@@ -151,7 +151,18 @@ class SMRT_Storyline {
 		// more needs to be set for all feeds - let's make sure it's set
 		$more = 1;
 		
+		// If the $more global gets set to '0' somewhere between here and the output of get_the_content
+		// we could have problems with our feed - this will prevent that
+		$more_text = function() { return '<!--more-->'; }
+
+		// Modify the 'the_content_more_link' filter
+		add_filter( 'the_content_more_link', $more_text );
+
 		$item['content'] = $this->split_content( get_the_content() );
+
+		// clear the filter
+		remote_filter( 'the_content_more_link', $more_text );
+
 		$item['last_modified'] = get_the_modified_time( json_feed_date_format() );
 		
 		$item['updated'] = (bool) get_post_meta( $id, '_smrt_update_alert_sent' , true );
