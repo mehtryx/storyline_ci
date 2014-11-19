@@ -334,7 +334,7 @@ class SMRT_Storyline {
 		if ( empty( $content ) ) {
 			return array();
 		}
-		$content = preg_replace( '/<span id=\"more-.*\"><\/span>/uim', "<!--more-->", $content );
+		$content = preg_replace( '/<span id=\"more-.*?\"><\/span>/uim', "<!--more-->", $content );
 		$slides = explode( "<!--more-->", $content );
 
 		// apply filters
