@@ -141,10 +141,15 @@ class SMRT_Storyline {
 	 * @return object The updated json feed item
 	 */
 	public function json_feed_items_with_slides( $item, $id, $query_args, $json_feed ) {
-				
+		global $more;
+
 		// only update posts of type storyline
 		if ( 'storyline' !== $item['type'] )
 			return $item;
+
+		// if this is 0 get_the_content will inject 'the_content_more_link' in http://core.svn.wordpress.org/trunk/wp-includes/post-template.php
+		// more needs to be set for all feeds - let's make sure it's set
+		$more = 1;
 		
 		$item['content'] = $this->split_content( get_the_content() );
 		$item['last_modified'] = get_the_modified_time( json_feed_date_format() );
