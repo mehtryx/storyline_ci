@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.5.3
+Version: 0.5.4
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.5.3' );
+define( 'SMRT_STORYLINE_VERSION', '0.5.4' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -153,7 +153,7 @@ class SMRT_Storyline {
 		
 		// If the $more global gets set to '0' somewhere between here and the output of get_the_content
 		// we could have problems with our feed - this will prevent that
-		$more_text = function() { return '<!--more-->'; }
+		$more_text = function() { return '<!--more-->'; };
 
 		// Modify the 'the_content_more_link' filter
 		add_filter( 'the_content_more_link', $more_text );
@@ -161,7 +161,7 @@ class SMRT_Storyline {
 		$item['content'] = $this->split_content( get_the_content() );
 
 		// clear the filter
-		remote_filter( 'the_content_more_link', $more_text );
+		remove_filter( 'the_content_more_link', $more_text );
 
 		$item['last_modified'] = get_the_modified_time( json_feed_date_format() );
 		
