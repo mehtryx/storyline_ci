@@ -147,6 +147,16 @@ class SMRT_Storyline {
 		if ( 'storyline' !== $item['type'] )
 			return $item;
 
+		//Storyline API modifications for Smartphone.  Non-search calls and calls without following IDs only return story IDs and date_sort
+		if ( !array_key_exists( 's' , $query_args ) && !array_key_exists( 'following' , $query_args )){
+			if ( isset( $item['id'] ) ) {
+				$id_item['id'] = $item['id'];
+			}
+			if ( isset( $item['date_sort'] ) ) {
+				$id_item['date_sort'] = $item['date_sort'];
+			}
+			return $id_item;
+		}
 		// if this is 0 get_the_content will inject 'the_content_more_link' in http://core.svn.wordpress.org/trunk/wp-includes/post-template.php
 		// more needs to be set for all feeds - let's make sure it's set
 		$more = 1;
