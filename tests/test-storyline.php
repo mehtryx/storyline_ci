@@ -104,6 +104,48 @@ class StorylineTest extends WP_UnitTestCase {
         $this->assertEquals( 3, $enable_topic_to_test->term_group );
     }
 
+    function testPDShortcodeWithYouTubeReturnsYouTubeEmbed() {
+        $url = "https://www.youtube.com/watch?v=d0K436vUM4w";
+
+        $youtube_embed = do_shortcode( '[pd source="YouTube" url="' . $url . '"]' );
+
+        $this->assertEquals( "http://youtube.com/embed/d0K436vUM4w", $youtube_embed );
+    }
+
+    function testPDShortcodeWithVineReturnsVineEmbed() {
+        $url = "https://vine.co/v/O6ainAM5nbO";
+        $params = "/embed/simple";
+
+        $vine_embed = do_shortcode( '[pd source="Vine" url="' . $url . '" params="' . $params . '"]' );
+
+        $this->assertEquals( "https://vine.co/v/O6ainAM5nbO/embed/simple", $vine_embed );
+    }
+
+    function testPDShortcodeWithInstagramReturnsInstagramEmbed() {
+        $url = "https://instagram.com/p/wzImN9EXCE";
+        $params = "/embed";
+
+        $instagram_embed = do_shortcode( '[pd source="Instagram" url="' . $url . '" params="' . $params . '"]' );
+
+        $this->assertEquals( "https://instagram.com/p/wzImN9EXCE/embed", $instagram_embed );
+    }
+
+    function testPDShortcodeWithSoundCloudReturnsSoundCloudEmbed() {
+        $url = "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/92212665";
+        $params = "&amp;color=ff6600&amp;auto_play=false&amp;show_artwork=true";
+
+        $soundcloud_embed = do_shortcode( '[pd source="SoundCloud" url="' . $url . '" params="' . $params . '"]' );
+
+        $this->assertEquals( "https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/92212665&amp;color=ff6600&amp;auto_play=false&amp;show_artwork=true", $soundcloud_embed );
+    }
+
+    function testPDShortcodeWithVimeoReturnsVimeoEmbed() {
+        $url = "http://player.vimeo.com/video/114536933";
+        $vimeo_embed = do_shortcode( '[pd source="Vimeo" url="' . $url . '"]' );
+
+        $this->assertEquals( "http://player.vimeo.com/video/114536933", $vimeo_embed );
+    }
+
     function tearDown() {
         if( isset( $_POST[ 'term_group' ] ) ) {
             unset( $_POST[ 'term_group' ] );

@@ -112,6 +112,184 @@ class SMRT_Storyline {
 		}
 	}
 
+    /**
+     * Handles shortcode pd which allows user to embed different social media feeds.
+     *
+     * @since 0.5.5
+     *
+     * @param $attr
+     *
+     * @author Donnie Marges
+     */
+    function embedded_media_shortcode_handler( $attr ) {
+
+        $url = $attr[ 'url' ];
+        $params = $attr[ 'params' ];
+        $source = $attr[ 'source' ];
+
+        if( isset( $source ) && !empty( $source ) ) {
+            $source = strtolower( trim( $source ) );
+        }
+
+        if( isset( $url ) && !empty( $url ) ) {
+            switch( $source ) {
+
+                case 'twitter':
+                    $content = $this->output_twitter_embed( $url );
+                    break;
+
+                case 'youtube':
+
+                    $content = $this->output_youtube_embed( $url );
+                    break;
+
+                default:
+                    $content = $this->output_embeded_media( $url, $params );
+                    break;
+            }
+        } else {
+            $content = '';
+        }
+
+        return $content;
+    }
+
+    function output_embeded_media( $url, $params = null ) {
+
+        if( empty( $url ) ) {
+            return null;
+        }
+
+        if( null !== $params ) {
+
+            $content = $url . $params;
+        } else {
+            $content = $url;
+        }
+
+        return $content;
+    }
+
+    function output_youtube_embed( $youtube_url ) {
+
+        if( isset( $youtube_url ) && !empty( $youtube_url ) ) {
+            $video_id = $this->get_youtube_video_id( $youtube_url );
+
+            if( null !== $video_id ) {
+                $content = "http://youtube.com/embed/" . $video_id;
+                return $content;
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    function get_youtube_video_id( $youtube_url ) {
+
+        if( isset( $youtube_url ) && !empty( $youtube_url ) ) {
+            $parts = explode( '=', $youtube_url );
+            $video_id = isset( $parts[1] ) ? $parts[1] : null;
+            return $video_id;
+        } else {
+            return null;
+        }
+    }
+
+
+   function output_twitter_embed( $url ) {
+       // check for the correct libraries
+       if( !class_exists('\Codebird\Codebird') ) {
+           echo '<!-- twitter embed error : codebird library not installed -->';
+           return '<!-- twitter embed error : codebird library not installed -->';
+       }
+       else if( !function_exists('curl_init') ) {
+           echo '<!-- twitter embed error : curl not installed -->';
+           return '<!-- twitter embed error : curl not installed -->';
+       }
+
+       // load settings options
+       $options = get_option( 'smrt_storyline_settings' );
+
+       if( !isset($options['consumer_key']) || !isset($options['consumer_secret']) || !isset($options['oauth_token']) || !isset($options['oauth_secret']) ) {
+           return '<!-- twitter embed error : settings > storyline > twitter settings not set -->';
+       }
+
+       if( $url ) {
+           $embed_id = substr( $url, strrpos( $url, '/', -1 ) + 1 );
+       }
+
+       if( !$embed_id ) {
+           return '<!-- twitter embed error : invalid id -->';
+       }
+       else {
+           // need to cache twitter data as we are seeing rate limiting issues
+           $cache_key = 'storyline-codebird-statusesshowid-' . $embed_id;
+
+           // check cache for tweet
+           $tweet = get_transient( $cache_key );
+
+           if( $tweet === false ) {
+               // set codebird consumer key/secret
+               \Codebird\Codebird::setConsumerKey($options['consumer_key'], $options['consumer_secret']);
+               $codebird = WP_Codebird::getInstance();
+               $codebird->setToken($options['oauth_token'], $options['oauth_secret']);
+
+               // retrieve tweet and generate html
+               $tweet = $codebird->statuses_show_ID( 'id='.$embed_id );
+
+               // cache tweet 5 minutes
+               set_transient( $cache_key, $tweet, 300 );
+           }
+
+           if( !isset($tweet->text) ) {
+               return '<!-- twitter embed error : could not retrieve tweet -->';
+           }
+
+           // needed to put 'href' on some elements as they are selected by the tap event not the parent 'anchor'
+           $embed_string = sprintf('
+							<div class="embed embed-twitter">
+	                            <div class="profile">
+	                            	<a href="%6$s">
+		                                <img class="profilepic" src="%5$s" data-href="%6$s">
+		                                <div class="name" data-href="%6$s">
+		                                    <span class="name" data-href="%6$s">%1$s</span>
+		                                    <div class="clear"></div>
+		                                    <span class="hand" data-href="%6$s">@%2$s</span>
+		                                </div>
+	                                </a>
+	                                <a href="%7$s" class="button twitter-plus"></a>
+	                                <a href="%7$s" class="button twitter"></a>
+	                            </div>
+	                            <div class="quote">
+	                                <div class="bg-blue">
+	                                    <div class="blue-box">
+		                                    <p class="tweet-quote">%3$s</p>
+		                                    <span class="date">%4$s</span>
+		                                    <a href="%10$s" class="button follow"></a>
+		                                    <a href="%9$s" class="button loop"></a>
+		                                    <a href="%8$s" class="button reply"></a>
+	                                    </div>
+	                                </div>
+	                            </div>
+	                        </div>',
+               $tweet->user->name,
+               $tweet->user->screen_name,
+               SMRT_Storyline::format_tweet_text( $tweet ),
+               date( 'j M y', strtotime($tweet->created_at) ),
+               esc_attr( $tweet->user->profile_image_url ),
+               'https://twitter.com/'. $tweet->user->screen_name,
+               'https://twitter.com/'. $tweet->user->screen_name .'?tw_i='. $tweet->id_str,
+               'https://twitter.com/intent/tweet?in_reply_to='. $tweet->id_str,
+               'https://twitter.com/intent/retweet?tweet_id='. $tweet->id_str,
+               'https://twitter.com/intent/favorite?tweet_id='. $tweet->id_str
+           );
+
+           return $embed_string;
+       }
+   }
+
 	/**
 	 * Adds the custom image sizes used by storyline
 	 *
@@ -1930,6 +2108,10 @@ class SMRT_Storyline {
 }
 global $smrt_storyline;
 $smrt_storyline = new SMRT_Storyline();
+
+//Add shortcodes
+add_shortcode( 'pd', array ( $smrt_storyline, 'embedded_media_shortcode_handler' ) );
+
 
 // create helper function for storyline preview
 function smrt_storyline_with_preview() {
