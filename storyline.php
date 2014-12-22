@@ -39,6 +39,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 define( 'SMRT_STORYLINE_VERSION', '0.5.5' );
 
+require_once ('Codebird/Codebird.php');
+
 /**
  * Main Storyline Class contains registration and hooks
  */
@@ -126,6 +128,9 @@ class SMRT_Storyline {
         $url = $attr[ 'url' ];
         $params = $attr[ 'params' ];
         $source = $attr[ 'source' ];
+        $type = $attr[ 'type' ];
+        $width = $attr[ 'width' ];
+        $height = $attr[ 'height' ];
 
         if( isset( $source ) && !empty( $source ) ) {
             $source = strtolower( trim( $source ) );
@@ -139,12 +144,17 @@ class SMRT_Storyline {
                     break;
 
                 case 'youtube':
-
                     $content = $this->output_youtube_embed( $url );
                     break;
 
                 default:
-                    $content = $this->output_embeded_media( $url, $params );
+                    if( 'iframe' === $type ) {
+                        $content = $this->output_embeded_media( $url, $params );
+                        $content = $this->wrap_embed_in_iframe( $content, $width, $height );
+                    } else {
+                        $content = $this->output_embeded_media( $url, $params );
+                    }
+
                     break;
             }
         } else {
@@ -197,20 +207,30 @@ class SMRT_Storyline {
         }
     }
 
+    function wrap_embed_in_iframe( $content, $width = 300, $height = 300 ) {
+        if( empty( $content ) ) {
+            return null;
+        }
 
-   function output_twitter_embed( $url ) {
+        $short_code_replacement = sprintf('<span class="embed"><iframe width="%s" height="%s" src="%s" frameborder="0"></iframe></span>', $width, $height, esc_url( trim( $content ) ) );
+
+        return $short_code_replacement;
+    }
+
+    function output_twitter_embed( $url ) {
+
        // check for the correct libraries
        if( !class_exists('\Codebird\Codebird') ) {
-           echo '<!-- twitter embed error : codebird library not installed -->';
            return '<!-- twitter embed error : codebird library not installed -->';
        }
        else if( !function_exists('curl_init') ) {
-           echo '<!-- twitter embed error : curl not installed -->';
            return '<!-- twitter embed error : curl not installed -->';
        }
 
        // load settings options
        $options = get_option( 'smrt_storyline_settings' );
+
+
 
        if( !isset($options['consumer_key']) || !isset($options['consumer_secret']) || !isset($options['oauth_token']) || !isset($options['oauth_secret']) ) {
            return '<!-- twitter embed error : settings > storyline > twitter settings not set -->';
@@ -233,7 +253,7 @@ class SMRT_Storyline {
            if( $tweet === false ) {
                // set codebird consumer key/secret
                \Codebird\Codebird::setConsumerKey($options['consumer_key'], $options['consumer_secret']);
-               $codebird = WP_Codebird::getInstance();
+               $codebird = \Codebird\Codebird::getInstance();
                $codebird->setToken($options['oauth_token'], $options['oauth_secret']);
 
                // retrieve tweet and generate html
@@ -288,7 +308,7 @@ class SMRT_Storyline {
 
            return $embed_string;
        }
-   }
+    }
 
 	/**
 	 * Adds the custom image sizes used by storyline
