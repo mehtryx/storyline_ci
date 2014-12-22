@@ -483,24 +483,6 @@ class SMRT_Storyline {
 
 					break;
 
-				// test tag for redfrog / kaltura embed testing
-				case 'redfrog':
-					if( $url ) {
-						$embed_id = substr( $url, strrpos( $url, '/', -1 ) + 1 );
-					}
-
-					// optional playlist param
-					$playlist = ( isset($attributes['playlist']) ) ? '?p=' . $attributes['playlist'] : '';
-
-					// video is 16:9 - adjust height
-					$height = intval(($width / 16 ) * 9);
-
-					if( !$embed_id ) return '<!-- redfrog embed error : invalid id -->';
-
-					$embed_string = 'http://redfrogconsulting.com/DEMOS/iframe/' . $embed_id . '/' . $playlist;
-				 	
-				 	break;
-
 				case 'kaltura':
 					if( $url ) {
 						$embed_id = substr( $url, strrpos( $url, '/', -1 ) + 1 );
@@ -511,7 +493,9 @@ class SMRT_Storyline {
 
 					if( !$embed_id ) return '<!-- kaltura embed error : invalid id -->';
 
-					$embed_string = 'http://cdnapi.kaltura.com/html5/html5lib/v2.8.2/mwEmbedFrame.php/p/1698541/uiconf_id/22793731/entry_id/' . $embed_id . '?wid=_1698541&iframeembed=true';
+					// http://cdnapi.kaltura.com/html5/html5lib/{kaltura version}/mwEmbedFrame.php/p/{our prod account #}/uiconf_id/{Id # of the player}/entry_id/{videoId}?wid=_{Prod account # again}&iframeembed=true
+
+					$embed_string = 'http://cdnapi.kaltura.com/html5/html5lib/v2.18.2.2/mwEmbedFrame.php/p/1698541/uiconf_id/22793731/entry_id/' . $embed_id . '?wid=_1698541&iframeembed=true';
 				 	
 				 	break;
 
