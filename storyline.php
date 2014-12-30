@@ -4,7 +4,7 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
-Version: 0.5.5
+Version: 0.5.6
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.5.5' );
+define( 'SMRT_STORYLINE_VERSION', '0.5.6' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -493,10 +493,9 @@ class SMRT_Storyline {
 
 					if( !$embed_id ) return '<!-- kaltura embed error : invalid id -->';
 
-					// http://cdnapi.kaltura.com/html5/html5lib/{kaltura version}/mwEmbedFrame.php/p/{our prod account #}/uiconf_id/{Id # of the player}/entry_id/{videoId}?wid=_{Prod account # again}&iframeembed=true
+				 	// http://www.kaltura.com/p/{PARTNER_ID}/sp/{PARTNER_ID}00/embedIframeJs/uiconf_id/{UICONF_ID}/partner_id/{PARTNER_ID}?iframeembed=true&playerId={UNIQUE_OBJ_ID}&entry_id={ENTRY_ID}
+					$embed_string = 'http://www.kaltura.com/p/1698541/sp/169854100/embedIframeJs/uiconf_id/22793731/partner_id/1698541?iframeembed=true&entry_id=' . $embed_id;
 
-					$embed_string = 'http://cdnapi.kaltura.com/html5/html5lib/v2.18.2.2/mwEmbedFrame.php/p/1698541/uiconf_id/22793731/entry_id/' . $embed_id . '?wid=_1698541&iframeembed=true';
-				 	
 				 	break;
 
 				case 'soundcloud':
@@ -642,7 +641,7 @@ class SMRT_Storyline {
 				$short_code_replacement = trim($embed_string);
 			}
 			else {
-				$short_code_replacement = sprintf('<span class="embed embed-%s"><iframe width="%s" height="%s" src="%s" frameborder="0"></iframe></span>', esc_attr( $embed_name ), $width, $height, esc_url( trim($embed_string) ) );
+				$short_code_replacement = sprintf('<span class="embed embed-%s"><iframe width="%s" height="%s" src="%s" frameborder="0"></iframe></span>', esc_attr( $embed_name ), $width, $height, trim($embed_string) );
 			}
 
 			// return final output
