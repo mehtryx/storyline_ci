@@ -4,7 +4,11 @@ Plugin Name: Storyline
 Plugin URI: http://github.com/Postmedia/storyline
 Description: Supports mobile story elements
 Author: Postmedia Network Inc.
+<<<<<<< HEAD
 Version: 0.5.4
+=======
+Version: 0.5.5
+>>>>>>> staging
 Author URI: http://github.com/Postmedia
 License: MIT    
 */
@@ -37,7 +41,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @package Storyline
  */
-define( 'SMRT_STORYLINE_VERSION', '0.5.4' );
+define( 'SMRT_STORYLINE_VERSION', '0.5.5' );
 
 /**
  * Main Storyline Class contains registration and hooks
@@ -446,6 +450,10 @@ class SMRT_Storyline {
 
 				if( count($ap_parts) > 1 ) {
 					$attributes[$ap_parts[0]] = trim($ap_parts[1], " \"'");
+
+					// fix for quotes being replaced with html entities
+					$replacements = array( '&#8221;' => '', '&#8243;' => '' );
+					$attributes[$ap_parts[0]] = str_replace( array_keys( $replacements ), array_values( $replacements ), $attributes[$ap_parts[0]] );
 				}
 			}
 		}
