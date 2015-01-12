@@ -53,6 +53,7 @@ install_test_suite() {
 	sed $ioption "s/yourpasswordhere/$DB_PASS/" wp-tests-config.php
 	sed $ioption "s|localhost|${DB_HOST}|" wp-tests-config.php
 	sed $ioption "s:replace/:'$WP_TESTS_DIR' . '/tests/':" $EXEC_DIR/tests/phpunit.xml
+	cat $EXEC_DIR/tests/phpunit.xml
 }
 
 install_db() {
