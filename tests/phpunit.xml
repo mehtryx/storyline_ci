@@ -1,0 +1,29 @@
+<phpunit
+	bootstrap="bootstrap.php"
+	backupGlobals="false"
+	colors="true"
+	convertErrorsToExceptions="true"
+	convertNoticesToExceptions="true"
+	convertWarningsToExceptions="true"
+	>
+	<testsuites>
+		<testsuite>
+			<directory prefix="test-" suffix=".php">./</directory>
+		</testsuite>
+        <!-- Wordpress Tests (created for testing wordpress core, we only run some of these for sanity check) -->
+        <testsuite>
+            <file>replace/basic.php</file>
+            <file>replace/cron.php</file>
+            <file>replace/db.php</file>
+            <file>replace/functions.php</file>
+            <file>replace/post.php</file>
+            <file>replace/query.php</file>
+            <file>replace/shortcode.php</file>
+            <file>replace/taxonomy.php</file>
+            <file>replace/term.php</file>
+            <file>replace/theme.php</file>
+            <file>replace/user.php</file>
+            <file>replace/widgets.php</file>
+        </testsuite>
+	</testsuites>
+</phpunit>

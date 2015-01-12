@@ -13,6 +13,7 @@ WP_VERSION=${5-latest}
 
 WP_TESTS_DIR=${WP_TESTS_DIR-/tmp/wordpress-tests-lib}
 WP_CORE_DIR=/tmp/wordpress/
+EXEC_DIR="$(pwd)"
 
 set -ex
 
@@ -43,6 +44,7 @@ install_test_suite() {
 	mkdir -p $WP_TESTS_DIR
 	cd $WP_TESTS_DIR
 	svn co --quiet http://develop.svn.wordpress.org/trunk/tests/phpunit/includes/
+	svn co --quiet http://develop.svn.wordpress.org/trunk/tests/phpunit/tests/
 
 	wget -nv -O wp-tests-config.php http://develop.svn.wordpress.org/trunk/wp-tests-config-sample.php
 	sed $ioption "s:dirname( __FILE__ ) . '/src/':'$WP_CORE_DIR':" wp-tests-config.php
@@ -50,6 +52,7 @@ install_test_suite() {
 	sed $ioption "s/yourusernamehere/$DB_USER/" wp-tests-config.php
 	sed $ioption "s/yourpasswordhere/$DB_PASS/" wp-tests-config.php
 	sed $ioption "s|localhost|${DB_HOST}|" wp-tests-config.php
+	sed $ioption "s:replace/:'$WP_TESTS_DIR' . '/tests/':" $EXEC_DIR/tests/phpunit.xml
 }
 
 install_db() {
