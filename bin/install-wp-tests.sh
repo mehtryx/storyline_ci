@@ -45,6 +45,7 @@ install_test_suite() {
 	cd $WP_TESTS_DIR
 	svn co --quiet http://develop.svn.wordpress.org/trunk/tests/phpunit/includes/
 	svn co --quiet http://develop.svn.wordpress.org/trunk/tests/phpunit/tests/
+	svn co --quiet http://develop.svn.wordpress.org/trunk/tests/phpunit/data/
 
 	wget -nv -O wp-tests-config.php http://develop.svn.wordpress.org/trunk/wp-tests-config-sample.php
 	sed $ioption "s:dirname( __FILE__ ) . '/src/':'$WP_CORE_DIR':" wp-tests-config.php
