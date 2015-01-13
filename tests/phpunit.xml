@@ -14,7 +14,6 @@
         <testsuite>
             <file>replace/basic.php</file>
             <file>replace/cron.php</file>
-            <file>replace/functions.php</file>
             <file>replace/post.php</file>
             <file>replace/query.php</file>
             <file>replace/shortcode.php</file>
